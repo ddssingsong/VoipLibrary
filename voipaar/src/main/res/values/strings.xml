@@ -1,0 +1,38 @@
+<resources>
+
+    <string name="voice_chat">语音聊天</string>
+    <string name="call_fail">呼叫失败！</string>
+    <string name="voice_chat_time"> 聊天时长 </string>
+    <string name="voice_chat_hang_up">已拒绝</string>
+    <string name="voice_chat_friend_refused">对方已拒绝</string>
+    <string name="voice_chat_no_answer">对方无应答</string>
+    <string name="voice_chat_cancel">已取消</string>
+    <string name="voice_chat_friend_cancel">对方已取消</string>
+    <string name="voice_chat_time_out">未接</string>
+    <string name="voice_chat_chating">您正在通话中，请稍后再试！</string>
+    <string name="voice_chat_with_friend">%s语音聊天中，点击以继续.</string>
+    <string name="voice_chat_invite_call">正在等待对方接收邀请</string>
+    <string name="voice_chat_invite">邀请你进行语音聊天</string>
+    <string name="voice_chat_mute">静音</string>
+    <string name="voice_chat_hands_free">免提</string>
+    <string name="voice_chat_refuse">拒接</string>
+    <string name="voice_chat_answer">接听</string>
+    <string name="voice_chat_refuse_call">挂断</string>
+    <string name="voice_chat_receiver">对方已切到语音聊天，请使用听筒接听</string>
+    <string name="voice_chat_getmastkey">正在解密通话密钥</string>
+    <string name="assistant_cannot_voice_chat">您不能和摩贝小秘书语音聊天!</string>
+    <string name="voice_chat_getmastkey_fial">解密通话密钥失败!</string>
+    <string name="voice_cha_not_logged_in">%s未登录</string>
+    <string name="voice_chat_no_answer_toast">对方手机可能不在身边，建议稍后再次尝试.</string>
+    <string name="voice_chat_friend_refused_toast">对方拒绝了您的请求.</string>
+    <string name="voice_chat_succeed">对方已挂断,聊天结束.</string>
+    <string name="voice_chat_succeed_user">已挂断</string>
+    <string name="voice_chat_busy_toast">对方忙,请稍后再试!</string>
+    <string name="voice_chat_busy">对方忙线中</string>
+    <string name="voice_chat_not_found">对方未登录</string>
+    <string name="voice_chat_err">连接失败</string>
+    <string name="voice_chat_setmastkey_err_toast">持有好友公钥不正确,请刷新通讯录列表!</string>
+    <string name="voice_chat_setmastkey_err">密钥错误</string>
+    <string name="voice_chat_network_error_toast">网络异常,聊天结束.</string>
+    <string name="unplug_sd_card">请插入正确TF卡后使用!</string>
+</resources>

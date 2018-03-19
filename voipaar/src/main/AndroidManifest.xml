@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.trustmobi.voip.voipaar">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <application>
+        <activity
+            android:name="com.trustmobi.voip.ChatActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+
+        <service
+            android:name="com.trustmobi.voip.LinphoneService"
+            android:enabled="true"
+            android:exported="true" />
+        <receiver android:name="com.trustmobi.voip.recevier.PhoneStateChangedReceiver">
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>
