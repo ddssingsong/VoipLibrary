@@ -96,7 +96,6 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
     @Override
     protected void onStart() {
         super.onStart();
-        checkAndRequestCallPermissions();
     }
 
     @Override
@@ -297,34 +296,6 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             }
         };
     }
-
-    private void checkAndRequestCallPermissions() {
-        ArrayList<String> permissionsList = new ArrayList<String>();
-        int recordAudio = getPackageManager().checkPermission(Manifest.permission.RECORD_AUDIO, getPackageName());
-        org.linphone.mediastream.Log.i("[Permission] Record audio permission is " + (recordAudio == PackageManager.PERMISSION_GRANTED ? "granted" : "denied"));
-        int camera = getPackageManager().checkPermission(Manifest.permission.CAMERA, getPackageName());
-        org.linphone.mediastream.Log.i("[Permission] Camera permission is " + (camera == PackageManager.PERMISSION_GRANTED ? "granted" : "denied"));
-
-        if (recordAudio != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
-                org.linphone.mediastream.Log.i("[Permission] Asking for record audio");
-                permissionsList.add(Manifest.permission.RECORD_AUDIO);
-            }
-        }
-        if (camera != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                org.linphone.mediastream.Log.i("[Permission] Asking for camera");
-                permissionsList.add(Manifest.permission.CAMERA);
-            }
-        }
-
-        if (permissionsList.size() > 0) {
-            String[] permissions = new String[permissionsList.size()];
-            permissions = permissionsList.toArray(permissions);
-            ActivityCompat.requestPermissions(this, permissions, 0);
-        }
-    }
-
 
     private boolean isSpeakerEnabled = false, isMicMuted = false;
 

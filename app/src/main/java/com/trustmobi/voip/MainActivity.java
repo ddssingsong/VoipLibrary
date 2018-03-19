@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void call(View view) {
-        VoipHelper.getInstance().call(this, edit_to.getText().toString().trim());
+        VoipHelper.getInstance().callAudio(this, edit_to.getText().toString().trim());
     }
 
     public void video(View view) {
