@@ -17,6 +17,12 @@
             android:orientation="vertical">
 
             <EditText
+                android:id="@+id/stun"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Stun Server" />
+
+            <EditText
                 android:id="@+id/domain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,6 +47,13 @@
                 android:layout_height="wrap_content"
                 android:onClick="openVoip"
                 android:text="开启voip" />
+
+            <Button
+                android:id="@+id/button4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="closeVoip"
+                android:text="关闭voip" />
 
 
             <EditText

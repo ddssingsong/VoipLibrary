@@ -1,15 +1,12 @@
 package com.trustmobi.voip;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.v4.app.ActivityCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -21,11 +18,12 @@ import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.trustmobi.voip.callback.VoipCallback;
+import com.trustmobi.voip.callback.DisplayCallback;
 import com.trustmobi.voip.utils.LinphoneUtils;
 import com.trustmobi.voip.voipaar.R;
 import com.trustmobi.voip.widget.ComButton;
@@ -42,6 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ChatActivity extends Activity implements ComButton.onComClick, View.OnClickListener {
+
+    private RelativeLayout voip_rl_audio;
 
     private LinearLayout voip_chat_incoming;
     private LinearLayout voip_voice_chatting;
@@ -133,6 +133,7 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
     }
 
     private void initView() {
+        voip_rl_audio = findViewById(R.id.voip_rl_audio);
         voip_chat_incoming = findViewById(R.id.voip_chat_incoming);
         voip_voice_chatting = findViewById(R.id.voip_voice_chatting);
         voip_chat_mute = findViewById(R.id.voip_chat_mute);
@@ -163,6 +164,12 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             voip_voice_chatting.setVisibility(View.INVISIBLE);
             lookupIncomingCall();
             updateChatStateTips("邀请您进行语音通话...");
+            if (mCall != null) {
+                LinphoneCore lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+                if (lc != null) {
+                    lc.enableSpeaker(true);
+                }
+            }
         } else {
             //正在通话中
             voip_chat_incoming.setVisibility(View.INVISIBLE);
@@ -175,14 +182,19 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
                 registerCallDurationTimer(null, mCall);
             }
         }
+
+        //来的是视频通话
+        if (isVideoEnabled(LinphoneManager.getLc().getCurrentCall())) {
+            voip_rl_audio.setVisibility(View.GONE);
+            videoCallFragment = new VideoFragment();
+            getFragmentManager().beginTransaction().add(R.id.voip_fl_video, videoCallFragment).commitAllowingStateLoss();
+        }
         //显示头像和昵称
-        VoipCallback callback = VoipHelper.getInstance().getCallback();
+        DisplayCallback callback = VoipHelper.getInstance().getDisplayCallback();
         if (callback != null) {
             Glide.with(this).load(callback.getDisplayInfo().getAvatar()).into(voip_voice_chat_avatar);
             voice_chat_friend_name.setText(callback.getDisplayInfo().getNickName());
         }
-
-
     }
 
     private void lookupOutgoingCall() {
@@ -329,9 +341,7 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             toggleSpeaker();
 
         } else if (id == R.id.narrow_button) {
-            LinphoneService.instance().createNarrowView();
-            LinphoneService.instance().addNarrow();
-            ChatActivity.this.finish();
+            openNarrow();
         }
 
     }
@@ -459,12 +469,30 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
         public void onReceive(Context context, Intent intent) {
             String intentAction = intent.getAction();
             if (TextUtils.equals(intentAction, Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-                LinphoneService.instance().createNarrowView();
-                LinphoneService.instance().addNarrow();
-                ChatActivity.this.finish();
+                openNarrow();
             }
         }
 
+    }
+
+
+    private void openNarrow() {
+        SettingsCompat.setDrawOverlays(this, true);
+        LinphoneService.instance().createNarrowView();
+        ChatActivity.this.finish();
+    }
+
+    private VideoFragment videoCallFragment;
+
+    public void bindVideoFragment(VideoFragment fragment) {
+        videoCallFragment = fragment;
+    }
+
+    private boolean isVideoEnabled(LinphoneCall call) {
+        if (call != null) {
+            return call.getCurrentParams().getVideoEnabled();
+        }
+        return false;
     }
 
 }

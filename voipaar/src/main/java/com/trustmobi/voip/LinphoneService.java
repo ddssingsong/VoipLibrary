@@ -1,5 +1,7 @@
 package com.trustmobi.voip;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -7,6 +9,8 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -16,13 +20,16 @@ import android.view.WindowManager;
 import android.widget.Chronometer;
 import android.widget.Toast;
 
+import com.trustmobi.voip.callback.NarrowCallback;
 import com.trustmobi.voip.voipaar.R;
 
 import org.linphone.core.CallDirection;
 import org.linphone.core.LinphoneAddress;
+import org.linphone.core.LinphoneAuthInfo;
 import org.linphone.core.LinphoneCall;
 import org.linphone.core.LinphoneCallLog;
 import org.linphone.core.LinphoneCore;
+import org.linphone.core.LinphoneCoreException;
 import org.linphone.core.LinphoneCoreFactory;
 import org.linphone.core.LinphoneCoreListenerBase;
 import org.linphone.core.LinphoneProxyConfig;
@@ -60,136 +67,47 @@ public class LinphoneService extends Service {
         LinphoneCoreFactory.instance().setDebugMode(VoipHelper.getInstance().getDebug(), "dds");
         Log.i("dds", START_LINPHONE_LOGS);
         dumpDeviceInformation();
-
-
         LinphoneManager.createAndStart(LinphoneService.this);
         instance = this;
         initListener();
+       // initAuth();
+
     }
 
-
-    //缩小悬浮框的设置
-    public void createNarrowView() {
+    public void initAuth() {
+        if (instance == null) return;
         try {
-            narrowView = LayoutInflater.from(this).inflate(R.layout.netmonitor, null);
-            mWindowManager = (WindowManager) getApplicationContext()
-                    .getSystemService(WINDOW_SERVICE);
-            mLayout = new WindowManager.LayoutParams();
-        } catch (Exception e) {
+            String password = VoipHelper.getInstance().getPassword();
+
+            String identity = "sip:" + VoipHelper.getInstance().getUserName() + "@" + VoipHelper.getInstance().getDomain();
+            String proxy = "sip:" + VoipHelper.getInstance().getUserName() + "@" + VoipHelper.getInstance().getDomain();
+            LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
+            LinphoneAddress identityAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy);
+
+            String username = identityAddr.getUserName();
+            String domain = identityAddr.getDomain();
+
+            LinphoneProxyConfig prxCfg = LinphoneManager.getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
+            proxyAddr.setTransport(LinphoneAddress.TransportType.LinphoneTransportUdp);
+            prxCfg.setExpires(3600);
+            prxCfg.enableQualityReporting(false);
+            prxCfg.enableAvpf(false);
+            prxCfg.setAvpfRRInterval(0);
+            prxCfg.enableQualityReporting(false);
+            LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, password, null, null, domain);
+            LinphoneManager.getLc().addProxyConfig(prxCfg);
+            LinphoneManager.getLc().addAuthInfo(authInfo);
+            LinphoneManager.getLc().setDefaultProxyConfig(prxCfg);
+
+            String stun = VoipHelper.getInstance().getStunServer();
+            if (!TextUtils.isEmpty(stun)) {
+                LinphoneManager.getInstance().setStunServer(stun);
+            }
+        } catch (LinphoneCoreException e) {
             e.printStackTrace();
         }
-        mLayout.type = WindowManager.LayoutParams.TYPE_TOAST;
-        mLayout.format = PixelFormat.RGBA_8888;
-        mLayout.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-        mLayout.gravity = Gravity.LEFT | Gravity.TOP;
-        mLayout.width = WindowManager.LayoutParams.WRAP_CONTENT;
-        mLayout.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        mLayout.x = this.getResources().getDisplayMetrics().widthPixels;
-        mLayout.y = 0;
-        nominator_tv = narrowView.findViewById(R.id.netmonitor_tv);
-        narrowView.setOnTouchListener(new View.OnTouchListener() {
-            float downX = 0;
-            float downY = 0;
-            int oddOffsetX = 0;
-            int oddOffsetY = 0;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        downX = event.getX();
-                        downY = event.getY();
-                        oddOffsetX = mLayout.x;
-                        oddOffsetY = mLayout.y;
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        float moveX = event.getX();
-                        float moveY = event.getY();
-                        mLayout.x += (moveX - downX) / 3;
-                        mLayout.y += (moveY - downY) / 3;
-                        if (narrowView != null) {
-                            mWindowManager.updateViewLayout(narrowView, mLayout);
-                        }
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        int newOffsetX = mLayout.x;
-                        int newOffsetY = mLayout.y;
-                        if (Math.abs(newOffsetX - oddOffsetX) <= 20 && Math.abs(newOffsetY - oddOffsetY) <= 20) {
-                            //开启Activity
-                            LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
-                            if (call.getState() == LinphoneCall.State.StreamsRunning ||
-                                    call.getState() == LinphoneCall.State.PausedByRemote ||
-                                    call.getState() == LinphoneCall.State.Paused ||
-                                    call.getState() == LinphoneCall.State.Pausing
-                                    ) {
-                                ChatActivity.openActivity(LinphoneService.this, 2);
-                            } else {
-                                if (call.getDirection() == CallDirection.Outgoing) {
-                                    ChatActivity.openActivity(LinphoneService.this, 0);
-                                } else {
-                                    ChatActivity.openActivity(LinphoneService.this, 1);
-                                }
-                            }
-                            mWindowManager.removeView(narrowView);
-                        }
-
-                        break;
-                }
-
-                return true;
-
-            }
-        });
-
-
     }
 
-    public void addNarrow() {
-        LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
-        if (call != null) {
-            if (mWindowManager != null && narrowView != null) {
-                mWindowManager.addView(narrowView, mLayout);
-                LinphoneManager.getLc().enableSpeaker(true);
-                if (call.getState() == LinphoneCall.State.StreamsRunning ||
-                        call.getState() == LinphoneCall.State.PausedByRemote ||
-                        call.getState() == LinphoneCall.State.Paused ||
-                        call.getState() == LinphoneCall.State.Pausing
-                        ) {
-                    registerCallDurationTimer(null, call);
-                } else {
-                    if (call.getDirection() == CallDirection.Outgoing) {
-                        nominator_tv.setText("呼出中");
-                    } else {
-                        nominator_tv.setText("等待接听");
-                    }
-                }
-
-            }
-        }
-
-
-    }
-
-
-    private void registerCallDurationTimer(View v, LinphoneCall call) {
-        int callDuration = call.getDuration();
-        if (callDuration == 0 && call.getState() != LinphoneCall.State.StreamsRunning) {
-            return;
-        }
-        Chronometer timer = null;
-        if (v == null) {
-            timer = (Chronometer) narrowView.findViewById(R.id.netmonitor_tv);
-        }
-        timer.setBase(SystemClock.elapsedRealtime() - 1000 * callDuration);
-        timer.start();
-    }
-
-    public void removeNarrow() {
-        if (mWindowManager != null && narrowView != null) {
-            mWindowManager.removeView(narrowView);
-        }
-
-    }
 
     private LinphoneCoreListenerBase mListener;
 
@@ -203,8 +121,13 @@ public class LinphoneService extends Service {
                 }
                 //来电话
                 if (state == LinphoneCall.State.IncomingReceived) {
+                    Log.e("dds_test", "video:" + call.getCurrentParams().getVideoEnabled());
+                    Log.e("dds_test", "video:" + LinphoneManager.getLc().getCurrentCall().getCurrentParams().getVideoEnabled());
                     if (!LinphoneManager.getInstance().getCallGsmON()) {
-                        ChatActivity.openActivity(LinphoneService.this, 1);
+                        if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
+                            ChatActivity.openActivity(LinphoneService.this, 1);
+                        }
+
                     }
                 }
 
@@ -222,8 +145,14 @@ public class LinphoneService extends Service {
                 }
 
                 if (state == LinphoneCall.State.StreamsRunning) {
-
+                    //如果是播出电话，并且在后台状态，就打开界面
+                    if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Outgoing) {
+                        removeNarrow();
+                        ChatActivity.openActivity(LinphoneService.this, 2);
+                    }
                 } else {
+                    //log
+                    Log.d("dds", "else callState:" + state.toString());
 
                 }
             }
@@ -248,6 +177,163 @@ public class LinphoneService extends Service {
 
     }
 
+    //缩小悬浮框的设置
+    public void createNarrowView() {
+        if (SettingsCompat.canDrawOverlays(this)) {
+            try {
+                narrowView = LayoutInflater.from(this).inflate(R.layout.netmonitor, null);
+                mWindowManager = (WindowManager) getApplicationContext()
+                        .getSystemService(WINDOW_SERVICE);
+                mLayout = new WindowManager.LayoutParams();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            mLayout.type = WindowManager.LayoutParams.TYPE_TOAST;
+            mLayout.format = PixelFormat.RGBA_8888;
+            mLayout.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+            mLayout.gravity = Gravity.LEFT | Gravity.TOP;
+            mLayout.width = WindowManager.LayoutParams.WRAP_CONTENT;
+            mLayout.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            mLayout.x = this.getResources().getDisplayMetrics().widthPixels;
+            mLayout.y = 0;
+            nominator_tv = narrowView.findViewById(R.id.netmonitor_tv);
+            narrowView.setOnTouchListener(new View.OnTouchListener() {
+                float downX = 0;
+                float downY = 0;
+                int oddOffsetX = 0;
+                int oddOffsetY = 0;
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            downX = event.getX();
+                            downY = event.getY();
+                            oddOffsetX = mLayout.x;
+                            oddOffsetY = mLayout.y;
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            float moveX = event.getX();
+                            float moveY = event.getY();
+                            mLayout.x += (moveX - downX) / 3;
+                            mLayout.y += (moveY - downY) / 3;
+                            if (narrowView != null) {
+                                mWindowManager.updateViewLayout(narrowView, mLayout);
+                            }
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            int newOffsetX = mLayout.x;
+                            int newOffsetY = mLayout.y;
+                            if (Math.abs(newOffsetX - oddOffsetX) <= 20 && Math.abs(newOffsetY - oddOffsetY) <= 20) {
+                                //开启Activity
+                                LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
+                                if (call.getState() == LinphoneCall.State.StreamsRunning ||
+                                        call.getState() == LinphoneCall.State.PausedByRemote ||
+                                        call.getState() == LinphoneCall.State.Paused ||
+                                        call.getState() == LinphoneCall.State.Pausing
+                                        ) {
+                                    ChatActivity.openActivity(LinphoneService.this, 2);
+                                } else {
+                                    if (call.getDirection() == CallDirection.Outgoing) {
+                                        ChatActivity.openActivity(LinphoneService.this, 0);
+                                    } else {
+                                        ChatActivity.openActivity(LinphoneService.this, 1);
+                                    }
+                                }
+                                mWindowManager.removeView(narrowView);
+                            }
+
+                            break;
+                    }
+
+                    return true;
+
+                }
+            });
+
+            addNarrow();
+        } else {
+            //如果没有开启悬浮窗权限,开启悬浮窗界面
+            NarrowCallback callback = VoipHelper.getInstance().getNarrowCallback();
+            if (null != callback) {
+                callback.openSystemWindow();
+            }
+
+        }
+
+
+    }
+
+    public void addNarrow() {
+        LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
+        if (call != null) {
+            if (mWindowManager != null && narrowView != null && mLayout != null) {
+                mWindowManager.addView(narrowView, mLayout);
+                LinphoneManager.getLc().enableSpeaker(true);
+                if (call.getState() == LinphoneCall.State.StreamsRunning ||
+                        call.getState() == LinphoneCall.State.PausedByRemote ||
+                        call.getState() == LinphoneCall.State.Paused ||
+                        call.getState() == LinphoneCall.State.Pausing
+                        ) {
+                    registerCallDurationTimer(null, call);
+                } else {
+                    if (call.getDirection() == CallDirection.Outgoing) {
+                        nominator_tv.setText("呼出中");
+                    } else {
+                        nominator_tv.setText("等待接听");
+                    }
+                }
+
+            }
+        }
+
+
+    }
+
+    public void removeNarrow() {
+        if (mWindowManager != null && narrowView != null) {
+            try {
+                mWindowManager.removeView(narrowView);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    private void registerCallDurationTimer(View v, LinphoneCall call) {
+        int callDuration = call.getDuration();
+        if (callDuration == 0 && call.getState() != LinphoneCall.State.StreamsRunning) {
+            return;
+        }
+        Chronometer timer = null;
+        if (v == null) {
+            timer = (Chronometer) narrowView.findViewById(R.id.netmonitor_tv);
+        }
+        if (timer == null) {
+            return;
+        }
+        timer.setBase(SystemClock.elapsedRealtime() - 1000 * callDuration);
+        timer.start();
+    }
+
+    //添加通知
+    public void sendnotification() {
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                this, 0, new Intent(this, ChatActivity.class), 0);
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this, "voip")
+                        .setSmallIcon(R.drawable.answer)
+                        .setContentTitle("My notification")
+                        .setContentText("Hello World!")
+                        .setContentIntent(contentIntent);
+
+        mNotifyMgr.notify(110, mBuilder.build());
+    }
 
     @Override
     public synchronized void onDestroy() {

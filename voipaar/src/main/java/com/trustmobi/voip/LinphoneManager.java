@@ -1,15 +1,11 @@
 package com.trustmobi.voip;
 
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.Build;
-import android.os.Handler;
 import android.util.Log;
 
 import com.trustmobi.voip.utils.LinphoneUtils;
@@ -31,14 +27,13 @@ import org.linphone.core.LinphoneEvent;
 import org.linphone.core.LinphoneFriend;
 import org.linphone.core.LinphoneFriendList;
 import org.linphone.core.LinphoneInfoMessage;
+import org.linphone.core.LinphoneNatPolicy;
 import org.linphone.core.LinphoneProxyConfig;
-import org.linphone.core.OpenH264DownloadHelperListener;
 import org.linphone.core.PresenceBasicStatus;
 import org.linphone.core.PublishState;
 import org.linphone.core.SubscriptionState;
 import org.linphone.mediastream.Version;
 import org.linphone.mediastream.video.capture.hwconf.AndroidCameraConfiguration;
-import org.linphone.tools.OpenH264DownloadHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -197,24 +192,27 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.migrateCallLogs();
         resetCameraFromPreferences();
 
-        String sipAddress = "sip:" + VoipHelper.getInstance().getUserName() + "@" + VoipHelper.getInstance().getDomain();
-        String password = VoipHelper.getInstance().getPassword();
-        LinphoneAddress address = LinphoneCoreFactory.instance().createLinphoneAddress(sipAddress);
-        String username = address.getUserName();
-        String domain = address.getDomain();
-        address.setTransport(LinphoneAddress.TransportType.LinphoneTransportUdp);
-        if (password != null) {
-            // create authentication structure from identity and add to linphone
-            mLc.addAuthInfo(LinphoneCoreFactory.instance().createAuthInfo(username, password, null, domain));
-        }
-        LinphoneProxyConfig proxyCfg = mLc.createProxyConfig(sipAddress, domain, null, true);
-
-        proxyCfg.setExpires(2000);
-        proxyCfg.enableQualityReporting(false);
-        mLc.addProxyConfig(proxyCfg); // add it to linphone
-        mLc.setDefaultProxyConfig(proxyCfg);
-
+        Log.e("dds_test","initLiblinphone----------------------");
         callGsmON = false;
+    }
+
+
+    public void setStunServer(String stun) {
+        LinphoneNatPolicy nat = getOrCreateNatPolicy();
+        nat.setStunServer(stun);
+
+        if (stun != null && !stun.isEmpty()) {
+            nat.enableStun(true);
+        }
+        getLc().setNatPolicy(nat);
+    }
+
+    private LinphoneNatPolicy getOrCreateNatPolicy() {
+        LinphoneNatPolicy nat = getLc().getNatPolicy();
+        if (nat == null) {
+            nat = getLc().createNatPolicy();
+        }
+        return nat;
     }
 
     private void resetCameraFromPreferences() {
@@ -235,80 +233,6 @@ public class LinphoneManager implements LinphoneCoreListener {
             mLc.setRing(mRingSoundFile);
         }
     }
-
-
-    private OpenH264DownloadHelper mCodecDownloader;
-    private OpenH264DownloadHelperListener mCodecListener;
-    private Handler mHandler = new Handler();
-
-    public void initOpenH264DownloadHelper() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            Log.i("dds", "Android >= 5.1 we disable the download of OpenH264");
-            getLc().enableDownloadOpenH264(false);
-            return;
-        }
-
-        mCodecDownloader = LinphoneCoreFactory.instance().createOpenH264DownloadHelper();
-        mCodecListener = new OpenH264DownloadHelperListener() {
-            ProgressDialog progress;
-            int ctxt = 0;
-            int box = 1;
-
-            @Override
-            public void OnProgress(final int current, final int max) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        OpenH264DownloadHelper ohcodec = LinphoneManager.getInstance().getOpenH264DownloadHelper();
-                        if (progress == null) {
-                            progress = new ProgressDialog((Context) ohcodec.getUserData(ctxt));
-                            progress.setCanceledOnTouchOutside(false);
-                            progress.setCancelable(false);
-                            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                        } else if (current <= max) {
-                            progress.setMessage("下载OpenH264");
-                            progress.setMax(max);
-                            progress.setProgress(current);
-                            progress.show();
-                        } else {
-                            progress.dismiss();
-                            progress = null;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-//                                LinphoneManager.getLc().reloadMsPlugins(AssistantActivity.instance().getApplicationInfo().nativeLibraryDir);
-//                                AssistantActivity.instance().endDownloadCodec();
-                            } else {
-                                // We need to restart due to bad android linker
-//                                AssistantActivity.instance().restartApplication();
-                                mContext.stopService(new Intent(Intent.ACTION_MAIN).setClass(mContext, LinphoneService.class));
-                                android.os.Process.killProcess(android.os.Process.myPid());
-                            }
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void OnError(final String error) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (progress != null) progress.dismiss();
-                        AlertDialog.Builder builder = new AlertDialog.Builder((Context) LinphoneManager.getInstance().getOpenH264DownloadHelper().getUserData(ctxt));
-                        builder.setMessage("对不起，已出错");
-                        builder.setCancelable(false);
-                        builder.setNeutralButton("确定", null);
-                        builder.show();
-                    }
-                });
-            }
-        };
-        mCodecDownloader.setOpenH264HelperListener(mCodecListener);
-    }
-
-    public OpenH264DownloadHelper getOpenH264DownloadHelper() {
-        return mCodecDownloader;
-    }
-
 
     private void copyAssetsFromPackage() throws IOException {
         copyIfNotExist(R.raw.notes_of_the_optimistic, mRingSoundFile);
@@ -353,11 +277,11 @@ public class LinphoneManager implements LinphoneCoreListener {
         callGsmON = on;
     }
 
-    public void newOutgoingCall(String to) {
-        newOutgoingCall(to, to);
+    public void newOutgoingCall(String to, boolean videoEnable) {
+        newOutgoingCall(to, to, videoEnable);
     }
 
-    public void newOutgoingCall(String to, String displayName) {
+    public void newOutgoingCall(String to, String displayName, boolean videoEnable) {
         if (to == null) return;
         // If to is only a username, try to find the contact to get an alias if existing
         to = to + "@" + VoipHelper.getInstance().getDomain();
@@ -376,8 +300,8 @@ public class LinphoneManager implements LinphoneCoreListener {
         if (mLc.isNetworkReachable()) {
             try {
                 if (Version.isVideoCapable()) {
-                    boolean prefVideoEnable = false;
-                    boolean prefInitiateWithVideo = false;
+                    boolean prefVideoEnable = getLc().isVideoSupported() && getLc().isVideoEnabled();
+                    boolean prefInitiateWithVideo = getLc().getVideoAutoInitiatePolicy();
                     CallManager.getInstance().inviteAddress(lAddress, prefVideoEnable && prefInitiateWithVideo, isLowBandwidthConnection);
                 } else {
                     CallManager.getInstance().inviteAddress(lAddress, false, isLowBandwidthConnection);
