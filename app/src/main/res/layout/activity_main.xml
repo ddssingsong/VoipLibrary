@@ -9,18 +9,30 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/stun"
+
+            <Button
+                android:id="@+id/button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Stun Server" />
+                android:onClick="openVoip"
+                android:text="开启voipService"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/button4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="closeVoip"
+                android:text="关闭voipService"
+                android:textAllCaps="false" />
 
             <EditText
                 android:id="@+id/domain"
@@ -42,19 +54,32 @@
                 android:hint="密码" />
 
             <Button
-                android:id="@+id/button"
+                android:id="@+id/button5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="openVoip"
-                android:text="开启voip" />
+                android:onClick="login"
+                android:text="登录账号" />
 
             <Button
-                android:id="@+id/button4"
+                android:id="@+id/button6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="closeVoip"
-                android:text="关闭voip" />
+                android:onClick="logout"
+                android:text="退出登录" />
 
+
+            <EditText
+                android:id="@+id/stun"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Stun Server" />
+
+            <Button
+                android:id="@+id/button7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="openStun"
+                android:text="开启Stun服务" />
 
             <EditText
                 android:id="@+id/to"
@@ -77,6 +102,10 @@
                 android:layout_height="wrap_content"
                 android:onClick="video"
                 android:text="请求视频" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
 
         </LinearLayout>
 

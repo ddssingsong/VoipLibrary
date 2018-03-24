@@ -13,8 +13,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.trustmobi.voip.bean.DisplayInfo;
-import com.trustmobi.voip.callback.DisplayCallback;
 import com.trustmobi.voip.callback.NarrowCallback;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,9 +20,12 @@ public class MainActivity extends AppCompatActivity {
     EditText edit_username;
     EditText edit_pwd;
     EditText edit_to;
-    private int REQUEST_CODE = 1000;
     EditText stun;
 
+    private boolean isDebug = true;
+    private boolean isToast = true;
+
+    private int REQUEST_CODE = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,33 +36,11 @@ public class MainActivity extends AppCompatActivity {
         edit_pwd = findViewById(R.id.password);
         edit_to = findViewById(R.id.to);
         stun = findViewById(R.id.stun);
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
-                != PackageManager.PERMISSION_GRANTED) {
-            //进入到这里代表没有权限.
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CALL_PHONE) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS)
-                    ) {
-                //已经禁止提示了
-                Toast.makeText(MainActivity.this, "您已禁止该权限，需要重新开启。", Toast.LENGTH_SHORT).show();
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CALL_PHONE,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.RECORD_AUDIO,
-                                Manifest.permission.CAMERA,
-                                Manifest.permission.READ_CONTACTS
-                        },
-                        REQUEST_CODE);
+        checkPermission();
+        NarrowTips();
+    }
 
-            }
-
-        } else {
-            //可以了
-        }
-
+    private void NarrowTips() {
         VoipHelper.getInstance().setNarrowCallback(new NarrowCallback() {
             @Override
             public void openSystemWindow() {
@@ -85,33 +64,57 @@ public class MainActivity extends AppCompatActivity {
                  * 设置点击返回键不会消失
                  * */
                 localBuilder.setCancelable(false).create();
-
                 localBuilder.show();
             }
         });
     }
 
-    public void openVoip(View view) {
-        VoipHelper.getInstance().setDisplayCallback(new DisplayCallback() {
-            @Override
-            public DisplayInfo getDisplayInfo() {
-                DisplayInfo displayInfo = new DisplayInfo();
-                displayInfo.setNickName(edit_to.getText().toString().trim());
-                displayInfo.setAvatar("http://img3.duitang.com/uploads/item/201505/23/20150523165343_M2dsr.jpeg");
-                return displayInfo;
+    private void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+            //进入到这里代表没有权限.
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CALL_PHONE) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS)
+                    ) {
+                //已经禁止提示了
+                Toast.makeText(MainActivity.this, "您已禁止该权限，需要重新开启。", Toast.LENGTH_SHORT).show();
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CALL_PHONE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.RECORD_AUDIO,
+                                Manifest.permission.CAMERA,
+                                Manifest.permission.READ_CONTACTS
+                        },
+                        REQUEST_CODE);
+
             }
-        });
-        VoipHelper.getInstance().setDebug(true);
+
+        }
+    }
+
+    public void openVoip(View view) {
+        VoipHelper.getInstance().setDebug(isDebug);
+        VoipHelper.getInstance().setDebug(isToast);
         VoipHelper.getInstance()
-                .setDomain(edit_domain.getText().toString().trim())
-                .setStunServer(stun.getText().toString().trim())
-                .setUserName(edit_username.getText().toString().trim())
-                .setPassword(edit_pwd.getText().toString().trim())
-                .startVoip(this);
+                .startVoipService(this);
     }
 
     public void closeVoip(View view) {
-        VoipHelper.getInstance().stopVoip(this);
+        VoipHelper.getInstance().stopVoipService(this);
+    }
+
+    public void login(View view) {
+        VoipHelper.getInstance().initAuth(
+                edit_domain.getText().toString().trim(), stun.getText().toString().trim(),
+                edit_username.getText().toString().trim(), edit_pwd.getText().toString().trim());
+    }
+
+    public void logout(View view) {
+        VoipHelper.getInstance().clearAuth();
     }
 
     public void call(View view) {
@@ -122,6 +125,18 @@ public class MainActivity extends AppCompatActivity {
         VoipHelper.getInstance().callVideo(this, edit_to.getText().toString().trim());
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String str[] = VoipHelper.getInstance().getAuth();
+        if (str != null) {
+            edit_domain.setText(str[0]);
+            edit_username.setText(str[1]);
+            edit_pwd.setText(str[2]);
+        }
+
+
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -135,4 +150,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    public void openStun(View view) {
+    }
 }

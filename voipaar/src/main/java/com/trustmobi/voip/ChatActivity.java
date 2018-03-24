@@ -22,8 +22,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.trustmobi.voip.callback.DisplayCallback;
 import com.trustmobi.voip.utils.LinphoneUtils;
 import com.trustmobi.voip.voipaar.R;
 import com.trustmobi.voip.widget.ComButton;
@@ -190,11 +188,11 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             getFragmentManager().beginTransaction().add(R.id.voip_fl_video, videoCallFragment).commitAllowingStateLoss();
         }
         //显示头像和昵称
-        DisplayCallback callback = VoipHelper.getInstance().getDisplayCallback();
-        if (callback != null) {
-            Glide.with(this).load(callback.getDisplayInfo().getAvatar()).into(voip_voice_chat_avatar);
-            voice_chat_friend_name.setText(callback.getDisplayInfo().getNickName());
-        }
+//        DisplayCallback callback = VoipHelper.getInstance().getDisplayCallback();
+//        if (callback != null) {
+//            Glide.with(this).load(callback.getDisplayInfo().getAvatar()).into(voip_voice_chat_avatar);
+//            voice_chat_friend_name.setText(callback.getDisplayInfo().getNickName());
+//        }
     }
 
     private void lookupOutgoingCall() {

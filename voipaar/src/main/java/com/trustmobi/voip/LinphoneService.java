@@ -45,6 +45,12 @@ public class LinphoneService extends Service {
     private WindowManager.LayoutParams mLayout;
     private View narrowView;
 
+    private boolean isDebug;
+
+    public static boolean isReady() {
+        return instance != null;
+    }
+
     public LinphoneService() {
     }
 
@@ -62,30 +68,27 @@ public class LinphoneService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        //设置日志
-        LinphoneCoreFactory.instance().setLogCollectionPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "linphone");
-        LinphoneCoreFactory.instance().setDebugMode(VoipHelper.getInstance().getDebug(), "dds");
-        Log.i("dds", START_LINPHONE_LOGS);
+        isDebug = VoipHelper.getInstance().getDebug();
+        LinphoneCoreFactory.instance().setLogCollectionPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/linphone");
+        LinphoneCoreFactory.instance().setDebugMode(isDebug, VoipHelper.VOIP_TAG);
+        Log.i(VoipHelper.VOIP_TAG, isDebug ? START_LINPHONE_LOGS : "Look at the log, you're too naughty");
         dumpDeviceInformation();
         LinphoneManager.createAndStart(LinphoneService.this);
         instance = this;
         initListener();
-       // initAuth();
-
+        if (VoipHelper.getInstance().isToast()) {
+            Toast.makeText(this, "Voip Running", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    public void initAuth() {
+    public void initAuth(String domain, String stun, String username, String pwd) {
         if (instance == null) return;
         try {
-            String password = VoipHelper.getInstance().getPassword();
-
-            String identity = "sip:" + VoipHelper.getInstance().getUserName() + "@" + VoipHelper.getInstance().getDomain();
-            String proxy = "sip:" + VoipHelper.getInstance().getUserName() + "@" + VoipHelper.getInstance().getDomain();
+            String identity = "sip:" + username + "@" + domain;
+            String proxy = "sip:" + username + "@" + domain;
             LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
             LinphoneAddress identityAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy);
 
-            String username = identityAddr.getUserName();
-            String domain = identityAddr.getDomain();
 
             LinphoneProxyConfig prxCfg = LinphoneManager.getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
             proxyAddr.setTransport(LinphoneAddress.TransportType.LinphoneTransportUdp);
@@ -94,17 +97,27 @@ public class LinphoneService extends Service {
             prxCfg.enableAvpf(false);
             prxCfg.setAvpfRRInterval(0);
             prxCfg.enableQualityReporting(false);
-            LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, password, null, null, domain);
+            LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, pwd, null, null, domain);
+            LinphoneManager.getLc().clearAuthInfos();
+            LinphoneManager.getLc().clearProxyConfigs();
+            LinphoneManager.getLc().clearCallLogs();
             LinphoneManager.getLc().addProxyConfig(prxCfg);
             LinphoneManager.getLc().addAuthInfo(authInfo);
             LinphoneManager.getLc().setDefaultProxyConfig(prxCfg);
-
-            String stun = VoipHelper.getInstance().getStunServer();
             if (!TextUtils.isEmpty(stun)) {
                 LinphoneManager.getInstance().setStunServer(stun);
             }
         } catch (LinphoneCoreException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void clearAuth() {
+        if (instance == null) return;
+        if (LinphoneManager.getLc() != null) {
+            LinphoneManager.getLc().clearCallLogs();
+            LinphoneManager.getLc().clearAuthInfos();
+            LinphoneManager.getLc().clearProxyConfigs();
         }
     }
 
@@ -116,13 +129,12 @@ public class LinphoneService extends Service {
             @Override
             public void callState(LinphoneCore lc, LinphoneCall call, LinphoneCall.State state, String message) {
                 if (instance == null) {
-                    Log.e("dds", "Service not ready, discarding call state change to " + state.toString());
+                    Log.e(VoipHelper.VOIP_TAG, "Service not ready, discarding call state change to " + state.toString());
                     return;
                 }
+                Log.d(VoipHelper.VOIP_TAG, "callState:" + state.toString() + ",call direction:" + call.getDirection() + ",message:" + message);
                 //来电话
                 if (state == LinphoneCall.State.IncomingReceived) {
-                    Log.e("dds_test", "video:" + call.getCurrentParams().getVideoEnabled());
-                    Log.e("dds_test", "video:" + LinphoneManager.getLc().getCurrentCall().getCurrentParams().getVideoEnabled());
                     if (!LinphoneManager.getInstance().getCallGsmON()) {
                         if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
                             ChatActivity.openActivity(LinphoneService.this, 1);
@@ -152,7 +164,7 @@ public class LinphoneService extends Service {
                     }
                 } else {
                     //log
-                    Log.d("dds", "else callState:" + state.toString());
+
 
                 }
             }
@@ -164,12 +176,15 @@ public class LinphoneService extends Service {
 
             @Override
             public void registrationState(LinphoneCore lc, LinphoneProxyConfig cfg, LinphoneCore.RegistrationState state, String smessage) {
-                Log.e("dds", "registrationState state:" + state + "  message: " + smessage);
+                Log.e(VoipHelper.VOIP_TAG, "registrationState state:" + state + "  message: " + smessage);
                 if (state == LinphoneCore.RegistrationState.RegistrationOk &&
                         LinphoneManager.getLc().getDefaultProxyConfig() != null &&
                         LinphoneManager.getLc().getDefaultProxyConfig().isRegistered()) {
-                    Log.e("dds", "voip登录成功");
-                    Toast.makeText(LinphoneService.this, "登陆成功", Toast.LENGTH_SHORT).show();
+                    Log.e(VoipHelper.VOIP_TAG, "Voip Login success ");
+                    if (VoipHelper.getInstance().isToast()) {
+                        Toast.makeText(LinphoneService.this, "Login success", Toast.LENGTH_SHORT).show();
+                    }
+
                 }
             }
         });
@@ -355,9 +370,9 @@ public class LinphoneService extends Service {
         sb.append("SDK=").append(Build.VERSION.SDK_INT).append("\n");
         sb.append("Supported ABIs=");
         for (String abi : Version.getCpuAbis()) {
-            sb.append(abi + ", ");
+            sb.append(abi).append(", ");
         }
         sb.append("\n");
-        Log.i("dds", sb.toString());
+        Log.i(VoipHelper.VOIP_TAG, isDebug ? sb.toString() : "");
     }
 }

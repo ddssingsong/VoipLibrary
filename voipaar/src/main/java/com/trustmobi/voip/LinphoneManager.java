@@ -59,8 +59,8 @@ public class LinphoneManager implements LinphoneCoreListener {
     private final String mRingbackSoundFile;
     private final String mPauseSoundFile;
     private final String mChatDatabaseFile;
-    private final String mCallLogDatabaseFile;
-    private final String mFriendsDatabaseFile;
+    //    private final String mCallLogDatabaseFile;
+//    private final String mFriendsDatabaseFile;
     private final String mErrorToneFile;
     private final String mUserCertificatePath;
 
@@ -85,8 +85,8 @@ public class LinphoneManager implements LinphoneCoreListener {
         mRingbackSoundFile = basePath + "/ringback.wav";
         mPauseSoundFile = basePath + "/hold.mkv";
         mChatDatabaseFile = basePath + "/linphone-history.db";
-        mCallLogDatabaseFile = basePath + "/linphone-log-history.db";
-        mFriendsDatabaseFile = basePath + "/linphone-friends.db";
+//        mCallLogDatabaseFile = basePath + "/linphone-log-history.db";
+//        mFriendsDatabaseFile = basePath + "/linphone-friends.db";
         mErrorToneFile = basePath + "/error.wav";
         mUserCertificatePath = basePath;
 
@@ -179,8 +179,8 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.setRootCA(mLinphoneRootCaFile);
         mLc.setPlayFile(mPauseSoundFile);
         mLc.setChatDatabasePath(mChatDatabaseFile);
-        mLc.setCallLogsDatabasePath(mCallLogDatabaseFile);
-        mLc.setFriendsDatabasePath(mFriendsDatabaseFile);
+//        mLc.setCallLogsDatabasePath(mCallLogDatabaseFile);
+//        mLc.setFriendsDatabasePath(mFriendsDatabaseFile);
         mLc.setUserCertificatesPath(mUserCertificatePath);
         mLc.setNetworkReachable(true);
         //mLc.setCallErrorTone(Reason.NotFound, mErrorToneFile);
@@ -192,7 +192,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.migrateCallLogs();
         resetCameraFromPreferences();
 
-        Log.e("dds_test","initLiblinphone----------------------");
+        Log.e("dds_test", "initLiblinphone----------------------");
         callGsmON = false;
     }
 
@@ -266,6 +266,35 @@ public class LinphoneManager implements LinphoneCoreListener {
         lInputStream.close();
     }
 
+    public LinphoneProxyConfig getProxyConfig() {
+        if (mLc != null) {
+            LinphoneProxyConfig[] proxyConfigList = mLc.getProxyConfigList();
+            if (proxyConfigList.length > 1) {
+                LinphoneProxyConfig config = mLc.getDefaultProxyConfig();
+                return config;
+            } else {
+                LinphoneProxyConfig config = proxyConfigList[0];
+                return config;
+            }
+        }
+        return null;
+    }
+
+
+    public LinphoneAuthInfo getAuthInfo() {
+        if (instance == null) return null;
+        LinphoneProxyConfig prxCfg = getProxyConfig();
+        if (prxCfg == null) return null;
+        try {
+            LinphoneAddress addr = LinphoneCoreFactory.instance().createLinphoneAddress(prxCfg.getIdentity());
+            LinphoneAuthInfo authInfo = getLc().findAuthInfo(addr.getUserName(), null, addr.getDomain());
+            return authInfo;
+        } catch (LinphoneCoreException e) {
+            org.linphone.mediastream.Log.e(e);
+        }
+        return null;
+    }
+
 
     private boolean callGsmON;
 
@@ -277,14 +306,13 @@ public class LinphoneManager implements LinphoneCoreListener {
         callGsmON = on;
     }
 
-    public void newOutgoingCall(String to, boolean videoEnable) {
-        newOutgoingCall(to, to, videoEnable);
+    public void newOutgoingCall(String to) {
+        newOutgoingCall(to, to);
     }
 
-    public void newOutgoingCall(String to, String displayName, boolean videoEnable) {
+    public void newOutgoingCall(String to, String displayName) {
         if (to == null) return;
-        // If to is only a username, try to find the contact to get an alias if existing
-        to = to + "@" + VoipHelper.getInstance().getDomain();
+        to = to + "@" + mLc.getDefaultProxyConfig().getDomain();
         Log.e("dds", "call to number:" + to);
         LinphoneAddress lAddress;
         try {
@@ -307,7 +335,7 @@ public class LinphoneManager implements LinphoneCoreListener {
                     CallManager.getInstance().inviteAddress(lAddress, false, isLowBandwidthConnection);
                 }
             } catch (LinphoneCoreException e) {
-                return;
+                e.printStackTrace();
             }
         }
     }
@@ -330,6 +358,8 @@ public class LinphoneManager implements LinphoneCoreListener {
     private void doDestroy() {
         try {
             mTimer.cancel();
+            mLc.clearProxyConfigs();
+            mLc.clearAuthInfos();
             mLc.destroy();
         } catch (RuntimeException e) {
             Log.e("dds", e.toString());
