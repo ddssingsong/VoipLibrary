@@ -98,19 +98,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void openVoip(View view) {
         VoipHelper.getInstance().setDebug(isDebug);
-        VoipHelper.getInstance().setDebug(isToast);
+        VoipHelper.getInstance().setToast(isToast);
         VoipHelper.getInstance()
-                .startVoipService(this);
-    }
-
-    public void closeVoip(View view) {
-        VoipHelper.getInstance().stopVoipService(this);
-    }
-
-    public void login(View view) {
-        VoipHelper.getInstance().initAuth(
-                edit_domain.getText().toString().trim(), stun.getText().toString().trim(),
-                edit_username.getText().toString().trim(), edit_pwd.getText().toString().trim());
+                .startVoipService(this, edit_domain.getText().toString().trim(), stun.getText().toString().trim(),
+                        edit_username.getText().toString().trim(), edit_pwd.getText().toString().trim());
     }
 
     public void logout(View view) {

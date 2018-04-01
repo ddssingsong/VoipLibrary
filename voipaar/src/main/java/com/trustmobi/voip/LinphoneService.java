@@ -32,6 +32,7 @@ import org.linphone.core.LinphoneCore;
 import org.linphone.core.LinphoneCoreException;
 import org.linphone.core.LinphoneCoreFactory;
 import org.linphone.core.LinphoneCoreListenerBase;
+import org.linphone.core.LinphoneNatPolicy;
 import org.linphone.core.LinphoneProxyConfig;
 import org.linphone.mediastream.Version;
 
@@ -77,8 +78,18 @@ public class LinphoneService extends Service {
         instance = this;
         initListener();
         if (VoipHelper.getInstance().isToast()) {
-            Toast.makeText(this, "Voip Running", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Voip open success", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        String userName = intent.getStringExtra("username");
+        String pwd = intent.getStringExtra("password");
+        String domain = intent.getStringExtra("domain");
+        String stun = intent.getStringExtra("String");
+        initAuth(domain, stun, userName, pwd);
+        return super.onStartCommand(intent, flags, startId);
     }
 
     public void initAuth(String domain, String stun, String username, String pwd) {
@@ -88,8 +99,6 @@ public class LinphoneService extends Service {
             String proxy = "sip:" + username + "@" + domain;
             LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
             LinphoneAddress identityAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy);
-
-
             LinphoneProxyConfig prxCfg = LinphoneManager.getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
             proxyAddr.setTransport(LinphoneAddress.TransportType.LinphoneTransportUdp);
             prxCfg.setExpires(3600);
@@ -97,27 +106,28 @@ public class LinphoneService extends Service {
             prxCfg.enableAvpf(false);
             prxCfg.setAvpfRRInterval(0);
             prxCfg.enableQualityReporting(false);
+
+
+
             LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, pwd, null, null, domain);
-            LinphoneManager.getLc().clearAuthInfos();
-            LinphoneManager.getLc().clearProxyConfigs();
-            LinphoneManager.getLc().clearCallLogs();
             LinphoneManager.getLc().addProxyConfig(prxCfg);
             LinphoneManager.getLc().addAuthInfo(authInfo);
             LinphoneManager.getLc().setDefaultProxyConfig(prxCfg);
             if (!TextUtils.isEmpty(stun)) {
                 LinphoneManager.getInstance().setStunServer(stun);
+                LinphoneManager.getInstance().setIceEnabled(true);
             }
         } catch (LinphoneCoreException e) {
             e.printStackTrace();
         }
     }
 
+
     public void clearAuth() {
         if (instance == null) return;
         if (LinphoneManager.getLc() != null) {
-            LinphoneManager.getLc().clearCallLogs();
-            LinphoneManager.getLc().clearAuthInfos();
-            LinphoneManager.getLc().clearProxyConfigs();
+            LinphoneManager.getInstance().deleteAllAccount();
+
         }
     }
 

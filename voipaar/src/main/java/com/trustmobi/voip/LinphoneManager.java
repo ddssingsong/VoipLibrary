@@ -197,6 +197,13 @@ public class LinphoneManager implements LinphoneCoreListener {
     }
 
 
+    public void setIceEnabled(boolean enabled) {
+        LinphoneNatPolicy nat = getOrCreateNatPolicy();
+        nat.enableIce(enabled);
+        LinphoneManager.getLc().setNatPolicy(nat);
+    }
+
+
     public void setStunServer(String stun) {
         LinphoneNatPolicy nat = getOrCreateNatPolicy();
         nat.setStunServer(stun);
@@ -204,8 +211,9 @@ public class LinphoneManager implements LinphoneCoreListener {
         if (stun != null && !stun.isEmpty()) {
             nat.enableStun(true);
         }
-        getLc().setNatPolicy(nat);
+        LinphoneManager.getLc().setNatPolicy(nat);
     }
+
 
     private LinphoneNatPolicy getOrCreateNatPolicy() {
         LinphoneNatPolicy nat = getLc().getNatPolicy();
@@ -266,6 +274,21 @@ public class LinphoneManager implements LinphoneCoreListener {
         lInputStream.close();
     }
 
+
+    public void deleteAllAccount() {
+        LinphoneProxyConfig[] prxCfgs = getLc().getProxyConfigList();
+        if (prxCfgs != null && prxCfgs.length > 0) {
+            for (int i = 0; i < prxCfgs.length; i++) {
+                getLc().removeProxyConfig(prxCfgs[i]);
+                LinphoneAuthInfo authInfo = getAuthInfo(i);
+                if (authInfo != null) {
+                    getLc().removeAuthInfo(authInfo);
+                }
+            }
+        }
+        getLc().refreshRegisters();
+    }
+
     public LinphoneProxyConfig getProxyConfig() {
         if (mLc != null) {
             LinphoneProxyConfig[] proxyConfigList = mLc.getProxyConfigList();
@@ -280,6 +303,12 @@ public class LinphoneManager implements LinphoneCoreListener {
         return null;
     }
 
+    private LinphoneProxyConfig getProxyConfig(int n) {
+        LinphoneProxyConfig[] prxCfgs = getLc().getProxyConfigList();
+        if (n < 0 || n >= prxCfgs.length)
+            return null;
+        return prxCfgs[n];
+    }
 
     public LinphoneAuthInfo getAuthInfo() {
         if (instance == null) return null;
@@ -292,6 +321,20 @@ public class LinphoneManager implements LinphoneCoreListener {
         } catch (LinphoneCoreException e) {
             org.linphone.mediastream.Log.e(e);
         }
+        return null;
+    }
+
+    private LinphoneAuthInfo getAuthInfo(int n) {
+        LinphoneProxyConfig prxCfg = getProxyConfig(n);
+        if (prxCfg == null) return null;
+        try {
+            LinphoneAddress addr = LinphoneCoreFactory.instance().createLinphoneAddress(prxCfg.getIdentity());
+            LinphoneAuthInfo authInfo = getLc().findAuthInfo(addr.getUserName(), null, addr.getDomain());
+            return authInfo;
+        } catch (LinphoneCoreException e) {
+            org.linphone.mediastream.Log.e(e);
+        }
+
         return null;
     }
 

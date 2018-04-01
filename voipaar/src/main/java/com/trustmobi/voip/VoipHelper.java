@@ -32,23 +32,14 @@ public class VoipHelper {
     }
 
     //开启voip服务
-    public void startVoipService(Context context) {
-        if (!LinphoneService.isReady()) {
-            context.startService(new Intent(Intent.ACTION_MAIN).setClass(context, LinphoneService.class));
-        } else {
-            Log.e(VOIP_TAG, "VOIP is running and does not need to be reopened");
-        }
+    public void startVoipService(Context context, String domain, String stun, String username, String pwd) {
+        Intent intent = new Intent(Intent.ACTION_MAIN).setClass(context, LinphoneService.class);
+        intent.putExtra("domain",domain);
+        intent.putExtra("stun",stun);
+        intent.putExtra("username",username);
+        intent.putExtra("password",pwd);
+        context.startService(intent);
 
-    }
-
-    //关闭Voip服务
-    public void stopVoipService(Context context) {
-        context.stopService(new Intent(Intent.ACTION_MAIN).setClass(context, LinphoneService.class));
-    }
-
-    //注册账号
-    public void initAuth(String domain, String stun, String username, String pwd) {
-        LinphoneService.instance().initAuth(domain, stun, username, pwd);
     }
 
     //清除账号

@@ -18,22 +18,6 @@
             android:orientation="vertical">
 
 
-            <Button
-                android:id="@+id/button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="openVoip"
-                android:text="开启voipService"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/button4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="closeVoip"
-                android:text="关闭voipService"
-                android:textAllCaps="false" />
-
             <EditText
                 android:id="@+id/domain"
                 android:layout_width="match_parent"
@@ -54,12 +38,12 @@
                 android:hint="密码" />
 
             <Button
-                android:id="@+id/button5"
+                android:id="@+id/button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="login"
-                android:text="登录账号" />
-
+                android:onClick="openVoip"
+                android:text="开启voipService"
+                android:textAllCaps="false" />
             <Button
                 android:id="@+id/button6"
                 android:layout_width="match_parent"
