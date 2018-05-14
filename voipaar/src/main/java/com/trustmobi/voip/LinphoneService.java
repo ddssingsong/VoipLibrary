@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -21,6 +20,8 @@ import android.widget.Chronometer;
 import android.widget.Toast;
 
 import com.trustmobi.voip.callback.NarrowCallback;
+import com.trustmobi.voip.callback.VoipCallBack;
+import com.trustmobi.voip.callback.VoipCallBackDefault;
 import com.trustmobi.voip.voipaar.R;
 
 import org.linphone.core.CallDirection;
@@ -32,13 +33,15 @@ import org.linphone.core.LinphoneCore;
 import org.linphone.core.LinphoneCoreException;
 import org.linphone.core.LinphoneCoreFactory;
 import org.linphone.core.LinphoneCoreListenerBase;
-import org.linphone.core.LinphoneNatPolicy;
 import org.linphone.core.LinphoneProxyConfig;
+import org.linphone.core.Reason;
 import org.linphone.mediastream.Version;
 
 public class LinphoneService extends Service {
     public static final String START_LINPHONE_LOGS = " ==== Phone information dump ====";
     private static LinphoneService instance;
+    private VoipCallBack callBack;
+    private NarrowCallback narrowCallback;
 
     //悬浮窗
     private Chronometer nominator_tv;
@@ -66,13 +69,21 @@ public class LinphoneService extends Service {
         throw new RuntimeException("LinphoneService not instantiated yet");
     }
 
+    public void setCallBack(VoipCallBack callBack) {
+        this.callBack = callBack;
+    }
+
+    public void setNarrowCallback(NarrowCallback narrowCallback) {
+        this.narrowCallback = narrowCallback;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
         isDebug = VoipHelper.getInstance().getDebug();
         LinphoneCoreFactory.instance().setLogCollectionPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/linphone");
         LinphoneCoreFactory.instance().setDebugMode(isDebug, VoipHelper.VOIP_TAG);
-        Log.i(VoipHelper.VOIP_TAG, isDebug ? START_LINPHONE_LOGS : "Look at the log, you're too naughty");
+        LinLog.e(VoipHelper.VOIP_TAG, isDebug ? START_LINPHONE_LOGS : "Look at the log, you're too naughty");
         dumpDeviceInformation();
         LinphoneManager.createAndStart(LinphoneService.this);
         instance = this;
@@ -80,42 +91,38 @@ public class LinphoneService extends Service {
         if (VoipHelper.getInstance().isToast()) {
             Toast.makeText(this, "Voip open success", Toast.LENGTH_SHORT).show();
         }
+        setCallBack(new VoipCallBackDefault(getApplication()));
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        String userName = intent.getStringExtra("username");
-        String pwd = intent.getStringExtra("password");
-        String domain = intent.getStringExtra("domain");
-        String stun = intent.getStringExtra("String");
-        initAuth(domain, stun, userName, pwd);
-        return super.onStartCommand(intent, flags, startId);
-    }
 
     public void initAuth(String domain, String stun, String username, String pwd) {
         if (instance == null) return;
         try {
-            String identity = "sip:" + username + "@" + domain;
-            String proxy = "sip:" + username + "@" + domain;
-            LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
-            LinphoneAddress identityAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy);
-            LinphoneProxyConfig prxCfg = LinphoneManager.getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
-            proxyAddr.setTransport(LinphoneAddress.TransportType.LinphoneTransportUdp);
-            prxCfg.setExpires(3600);
-            prxCfg.enableQualityReporting(false);
-            prxCfg.enableAvpf(false);
-            prxCfg.setAvpfRRInterval(0);
-            prxCfg.enableQualityReporting(false);
-
-
-
-            LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, pwd, null, null, domain);
-            LinphoneManager.getLc().addProxyConfig(prxCfg);
-            LinphoneManager.getLc().addAuthInfo(authInfo);
-            LinphoneManager.getLc().setDefaultProxyConfig(prxCfg);
-            if (!TextUtils.isEmpty(stun)) {
-                LinphoneManager.getInstance().setStunServer(stun);
-                LinphoneManager.getInstance().setIceEnabled(true);
+            LinphoneAuthInfo authinfo = LinphoneManager.getLc().findAuthInfo(username, domain, domain);
+            if (authinfo == null) {
+                String identity = "sip:" + username + "@" + domain;
+                String proxy = "sip:" + username + "@" + domain;
+                LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
+                LinphoneAddress identityAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy);
+                LinphoneProxyConfig prxCfg = LinphoneManager.getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
+                proxyAddr.setTransport(LinphoneAddress.TransportType.LinphoneTransportTcp);
+                prxCfg.setExpires(3600);
+                prxCfg.enableQualityReporting(false);
+                prxCfg.enableAvpf(false);
+                prxCfg.setAvpfRRInterval(0);
+                prxCfg.enableQualityReporting(false);
+                LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, pwd, null, null, domain);
+                LinphoneManager.getLc().addProxyConfig(prxCfg);
+                LinphoneManager.getLc().addAuthInfo(authInfo);
+                LinphoneManager.getLc().setDefaultProxyConfig(prxCfg);
+                if (!TextUtils.isEmpty(stun)) {
+                    LinphoneManager.getInstance().setStunServer(stun);
+                    LinphoneManager.getInstance().setIceEnabled(true);
+                }
+                LinLog.e(VoipHelper.VOIP_TAG, "VoipService startLinphoneAuthInfo  -->addAuthInfo");
+            } else {
+                refreshRegister();
+                LinLog.e(VoipHelper.VOIP_TAG, "VoipService startLinphoneAuthInfo  -->refreshRegister");
             }
         } catch (LinphoneCoreException e) {
             e.printStackTrace();
@@ -131,6 +138,11 @@ public class LinphoneService extends Service {
         }
     }
 
+    public void refreshRegister() {
+        if (LinphoneManager.getLc() != null) {
+            LinphoneManager.getLc().refreshRegisters();
+        }
+    }
 
     private LinphoneCoreListenerBase mListener;
 
@@ -139,43 +151,47 @@ public class LinphoneService extends Service {
             @Override
             public void callState(LinphoneCore lc, LinphoneCall call, LinphoneCall.State state, String message) {
                 if (instance == null) {
-                    Log.e(VoipHelper.VOIP_TAG, "Service not ready, discarding call state change to " + state.toString());
+                    LinLog.e(VoipHelper.VOIP_TAG, "Service not ready, discarding call state change to " + state.toString());
                     return;
                 }
-                Log.d(VoipHelper.VOIP_TAG, "callState:" + state.toString() + ",call direction:" + call.getDirection() + ",message:" + message);
-                //来电话
+                //=================================来电话时===================================================
+                boolean invisible = false;
                 if (state == LinphoneCall.State.IncomingReceived) {
-                    if (!LinphoneManager.getInstance().getCallGsmON()) {
-                        if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
-                            ChatActivity.openActivity(LinphoneService.this, 1);
-                        }
-
+                    if (callBack != null) {
+                        LinphoneAddress remoteAddress = call.getRemoteAddress();
+                        String userId = remoteAddress.getUserName();
+                        invisible = callBack.isContactVisible(userId);
                     }
+                    if (invisible) {
+                        if (!LinphoneManager.getInstance().getCallGsmON()) {
+                            if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
+                                ChatActivity.openActivity(LinphoneService.this, 1);
+                            }
+                        }
+                    } else {
+                        LinphoneManager.getLc().declineCall(call, Reason.Busy);
+                    }
+
                 }
 
-                //挂断电话
-                if (state == LinphoneCall.State.CallEnd || state == LinphoneCall.State.CallReleased || state == LinphoneCall.State.Error) {
-                    if (LinphoneManager.isInstanciated() && LinphoneManager.getLc() != null && LinphoneManager.getLc().getCallsNb() == 0) {
-
+                //=================================电话接通时===================================================
+                if (LinphoneCall.State.StreamsRunning == state) {
+                    //如果是播出电话，并且在后台状态，就打开界面
+                    if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Outgoing) {
+                        ChatActivity.openActivity(LinphoneService.this, 2);
+                        removeNarrow();
                     }
+                }
+                //=================================电话挂断时===================================================
+                if (state == LinphoneCall.State.CallEnd) {
+                    terminateCall(call, message);
                     removeNarrow();
                 }
 
-                if (state == LinphoneCall.State.CallEnd && call.getCallLog().getStatus() == LinphoneCallLog.CallStatus.Missed) {
-                    LinphoneAddress address = call.getRemoteAddress();
-
-                }
-
-                if (state == LinphoneCall.State.StreamsRunning) {
-                    //如果是播出电话，并且在后台状态，就打开界面
-                    if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Outgoing) {
-                        removeNarrow();
-                        ChatActivity.openActivity(LinphoneService.this, 2);
-                    }
-                } else {
-                    //log
-
-
+                //=================================出错时===================================================
+                if (state == LinphoneCall.State.Error) {
+                    terminateErrorCall(call, message);
+                    removeNarrow();
                 }
             }
 
@@ -186,11 +202,11 @@ public class LinphoneService extends Service {
 
             @Override
             public void registrationState(LinphoneCore lc, LinphoneProxyConfig cfg, LinphoneCore.RegistrationState state, String smessage) {
-                Log.e(VoipHelper.VOIP_TAG, "registrationState state:" + state + "  message: " + smessage);
+                LinLog.e(VoipHelper.VOIP_TAG, "registrationState state:" + state + "  message: " + smessage);
                 if (state == LinphoneCore.RegistrationState.RegistrationOk &&
                         LinphoneManager.getLc().getDefaultProxyConfig() != null &&
                         LinphoneManager.getLc().getDefaultProxyConfig().isRegistered()) {
-                    Log.e(VoipHelper.VOIP_TAG, "Voip Login success ");
+                    LinLog.e(VoipHelper.VOIP_TAG, "Voip Login success ");
                     if (VoipHelper.getInstance().isToast()) {
                         Toast.makeText(LinphoneService.this, "Login success", Toast.LENGTH_SHORT).show();
                     }
@@ -201,6 +217,106 @@ public class LinphoneService extends Service {
 
 
     }
+
+    private void terminateErrorCall(LinphoneCall call, String message) {
+        LinphoneAddress remoteAddress = call.getRemoteAddress();
+        String userId = remoteAddress.getUserName();
+        if (message != null && call.getErrorInfo().getReason() == Reason.NotFound) {
+            displayCustomToast(getString(R.string.voice_cha_not_logged_in, userId));
+        } else if (message != null && call.getErrorInfo().getReason() == Reason.Busy) {
+            displayCustomToast(getString(R.string.voice_chat_busy_toast));
+        } else if (message != null && call.getErrorInfo().getReason() == Reason.BadCredentials) {
+            displayCustomToast(getString(R.string.voice_chat_setmastkey_err_toast));
+        } else if (message != null && call.getErrorInfo().getReason() == Reason.Declined) {
+            displayCustomToast(getString(R.string.voice_chat_friend_refused_toast));
+        } else if (call.getErrorInfo().getReason() == Reason.Media) {
+            displayCustomToast("不兼容的媒体参数");
+        } else if (message != null) {
+            displayCustomToast(getString(R.string.voice_chat_friend_refused_toast));
+        }
+    }
+
+
+    //通话结束，分析挂断方式
+    private void terminateCall(LinphoneCall call, String message) {
+        LinphoneAddress remoteAddress = call.getRemoteAddress();
+        String userId = remoteAddress.getUserName();
+        LinphoneCallLog.CallStatus callstate = call.getCallLog().getStatus();
+        if (call.getDirection() == CallDirection.Outgoing) {
+            //对方拒绝了您的请求.
+            if (callstate == LinphoneCallLog.CallStatus.Declined) {
+                if (callBack != null) {
+                    Toast.makeText(this, getString(R.string.voice_chat_friend_refused_toast), Toast.LENGTH_SHORT).show();
+                    callBack.terminateCall(userId, getString(R.string.voice_chat_friend_refused));
+                }
+            }
+            //取消了呼出电话
+            else if (callstate == LinphoneCallLog.CallStatus.Aborted) {
+                if (callBack != null) {
+                    callBack.terminateCall(userId, getString(R.string.voice_chat_cancel));
+                }
+            }
+
+            // 正常通话挂断
+            else if (callstate == LinphoneCallLog.CallStatus.Success) {
+                int duration = call.getDuration();
+                String time = formatTime((long) (duration * 1000));
+                if (message.equals("Call ended")) {
+                    Toast.makeText(this, getString(R.string.voice_chat_succeed), Toast.LENGTH_SHORT).show();
+                    if (callBack != null) {
+                        callBack.terminateCall(userId, getString(R.string.voice_chat_time) + time);
+                    }
+                } else {
+                    Toast.makeText(this, getString(R.string.voice_chat_succeed_user), Toast.LENGTH_SHORT).show();
+                    if (callBack != null) {
+                        callBack.terminateCall(userId, getString(R.string.voice_chat_time) + time);
+                    }
+                }
+
+
+            }
+        } else if (call.getDirection() == CallDirection.Incoming) {
+            //对方取消了或者自己长时间未接
+            if (callstate == LinphoneCallLog.CallStatus.Missed) {
+                if (callBack != null) {
+                    if (message.equals("Call terminated")) {
+                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_time_out), true);
+                    } else if (message.equals("Call ended")) {
+                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_friend_cancel), true);
+                    }
+
+                }
+            }
+            //呼入中自己挂断了电话
+            else if (callstate == LinphoneCallLog.CallStatus.Declined) {
+                if (callBack != null) {
+                    callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_hang_up), false);
+                }
+            }
+
+            // 正常通话挂断
+            else if (callstate == LinphoneCallLog.CallStatus.Success) {
+                int duration = call.getDuration();
+                String time = formatTime((long) (duration * 1000));
+                if (message.equals("Call ended")) {
+                    Toast.makeText(this, getString(R.string.voice_chat_succeed), Toast.LENGTH_SHORT).show();
+                    if (callBack != null) {
+                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_time) + time, false);
+                    }
+                } else {
+                    Toast.makeText(this, getString(R.string.voice_chat_succeed_user), Toast.LENGTH_SHORT).show();
+                    if (callBack != null) {
+                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_time) + time, false);
+                    }
+                }
+
+
+            }
+        }
+
+
+    }
+
 
     //缩小悬浮框的设置
     public void createNarrowView() {
@@ -279,9 +395,8 @@ public class LinphoneService extends Service {
             addNarrow();
         } else {
             //如果没有开启悬浮窗权限,开启悬浮窗界面
-            NarrowCallback callback = VoipHelper.getInstance().getNarrowCallback();
-            if (null != callback) {
-                callback.openSystemWindow();
+            if (null != narrowCallback) {
+                narrowCallback.openSystemWindow();
             }
 
         }
@@ -383,6 +498,41 @@ public class LinphoneService extends Service {
             sb.append(abi).append(", ");
         }
         sb.append("\n");
-        Log.i(VoipHelper.VOIP_TAG, isDebug ? sb.toString() : "");
+        LinLog.d(VoipHelper.VOIP_TAG, isDebug ? sb.toString() : "");
     }
+
+    public void displayCustomToast(final String message) {
+        Toast toast = new Toast(getApplicationContext());
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setText(message);
+        toast.show();
+    }
+
+
+    public static String formatTime(Long ms) {
+        Integer ss = 1000;
+        Integer mi = ss * 60;
+        Integer hh = mi * 60;
+        Integer dd = hh * 24;
+
+        Long day = ms / dd;
+        Long hour = (ms - day * dd) / hh;
+        Long minute = (ms - day * dd - hour * hh) / mi;
+        Long second = (ms - day * dd - hour * hh - minute * mi) / ss;
+
+        StringBuffer sb = new StringBuffer();
+        if (day > 0) {
+            sb.append(day < 10 ? "0" + day : "" + day).append(":");
+        }
+        if (hour > 0) {
+            sb.append(hour < 10 ? "0" + hour : "" + hour).append(":");
+        }
+        sb.append(minute < 10 ? "0" + minute : "" + minute).append(":");
+        if (second > 0) {
+            sb.append(second < 10 ? "0" + second : "" + second);
+        }
+        return sb.toString();
+    }
+
 }

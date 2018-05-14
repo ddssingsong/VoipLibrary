@@ -3,6 +3,8 @@
     package="com.trustmobi.voip.voipaar">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application>
         <activity
             android:name="com.trustmobi.voip.ChatActivity"

@@ -8,12 +8,12 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageView;
@@ -76,6 +76,10 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.voip_activity_chat);
         initView();
         initVar();
@@ -103,11 +107,9 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
         if (lc != null) {
             lc.addListener(mListener);
             isSpeakerEnabled = lc.isSpeakerEnabled();
-            Log.e("dds_test", "onResume isSpeakerEnabled:" + isSpeakerEnabled);
             voip_chat_hands_free.setImageResource(isSpeakerEnabled ? R.drawable.hands_free : R.drawable.btn_voice_hand_free);
             isMicMuted = lc.isMicMuted();
             voip_chat_mute.setImageResource(isMicMuted ? R.drawable.mute : R.drawable.btn_voice_mute);
-            Log.e("dds_test", "onResume isMicMuted:" + isMicMuted);
         }
 
 
@@ -162,12 +164,6 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             voip_voice_chatting.setVisibility(View.INVISIBLE);
             lookupIncomingCall();
             updateChatStateTips("邀请您进行语音通话...");
-            if (mCall != null) {
-                LinphoneCore lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
-                if (lc != null) {
-                    lc.enableSpeaker(true);
-                }
-            }
         } else {
             //正在通话中
             voip_chat_incoming.setVisibility(View.INVISIBLE);
@@ -262,10 +258,10 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
                 } else {
                     //去电话
                     if (call == mCall && LinphoneCall.State.OutgoingRinging == state) {
-                        updateChatStateTips("正在等待对方接受邀请...");
+                        updateChatStateTips(getString(R.string.voice_chat_invite));
                     } else if (call == mCall && LinphoneCall.State.Connected == state) {
                         //开始接听
-                        updateChatStateTips("连接中...");
+                        updateChatStateTips(getString(R.string.voice_chat_connect));
                         voip_chat_mute.setEnable(true);
                         return;
                     } else if (call == mCall && LinphoneCall.State.StreamsRunning == state) {
@@ -274,33 +270,17 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
 
                     } else if (state == LinphoneCall.State.CallEnd) {
                         if (call.getErrorInfo().getReason() == Reason.Declined) {
-                            displayCustomToast("拒接来电", Toast.LENGTH_SHORT);
                             declineOutgoing();
                         }
                     } else if (state == LinphoneCall.State.Error) {
-                        // Convert LinphoneCore message for internalization
-                        if (call.getErrorInfo().getReason() == Reason.Declined) {
-                            displayCustomToast("拒接来电", Toast.LENGTH_SHORT);
-                            declineOutgoing();
-                        } else if (call.getErrorInfo().getReason() == Reason.NotFound) {
-                            displayCustomToast("未找到用户", Toast.LENGTH_SHORT);
-                            declineOutgoing();
-                        } else if (call.getErrorInfo().getReason() == Reason.Media) {
-                            displayCustomToast("不兼容的媒体参数", Toast.LENGTH_SHORT);
-                            declineOutgoing();
-                        } else if (call.getErrorInfo().getReason() == Reason.Busy) {
-                            displayCustomToast("用户正忙", Toast.LENGTH_SHORT);
-                            declineOutgoing();
-                        } else if (message != null) {
-                            displayCustomToast("未知错误 - " + message, Toast.LENGTH_SHORT);
-                            declineOutgoing();
-                        }
+                        declineOutgoing();
                     }
 
                     if (LinphoneManager.getLc().getCallsNb() == 0) {
                         finish();
                     }
                 }
+
 
 
             }
@@ -466,6 +446,7 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
         @Override
         public void onReceive(Context context, Intent intent) {
             String intentAction = intent.getAction();
+            //监听home键
             if (TextUtils.equals(intentAction, Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
                 openNarrow();
             }

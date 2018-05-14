@@ -1,16 +1,23 @@
 package com.trustmobi.voip;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.trustmobi.voip.utils.LinphoneUtils;
 import com.trustmobi.voip.voipaar.R;
 
+import org.linphone.core.CallDirection;
 import org.linphone.core.LinphoneAddress;
 import org.linphone.core.LinphoneAuthInfo;
 import org.linphone.core.LinphoneCall;
@@ -31,17 +38,25 @@ import org.linphone.core.LinphoneNatPolicy;
 import org.linphone.core.LinphoneProxyConfig;
 import org.linphone.core.PresenceBasicStatus;
 import org.linphone.core.PublishState;
+import org.linphone.core.Reason;
 import org.linphone.core.SubscriptionState;
 import org.linphone.mediastream.Version;
 import org.linphone.mediastream.video.capture.hwconf.AndroidCameraConfiguration;
+import org.linphone.mediastream.video.capture.hwconf.Hacks;
+import org.linphone.tools.H264Helper;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static android.media.AudioManager.MODE_RINGTONE;
+import static android.media.AudioManager.STREAM_RING;
+import static android.media.AudioManager.STREAM_VOICE_CALL;
 
 /**
  * Created by dds on 2018/3/17 0017.
@@ -59,8 +74,6 @@ public class LinphoneManager implements LinphoneCoreListener {
     private final String mRingbackSoundFile;
     private final String mPauseSoundFile;
     private final String mChatDatabaseFile;
-    //    private final String mCallLogDatabaseFile;
-//    private final String mFriendsDatabaseFile;
     private final String mErrorToneFile;
     private final String mUserCertificatePath;
 
@@ -71,6 +84,9 @@ public class LinphoneManager implements LinphoneCoreListener {
     private Resources mR;
 
     private ConnectivityManager mConnectivityManager;
+    private AudioManager mAudioManager;
+    private Vibrator mVibrator;
+    private MediaPlayer mRingerPlayer;
 
 
     protected LinphoneManager(final Context c) {
@@ -85,14 +101,14 @@ public class LinphoneManager implements LinphoneCoreListener {
         mRingbackSoundFile = basePath + "/ringback.wav";
         mPauseSoundFile = basePath + "/hold.mkv";
         mChatDatabaseFile = basePath + "/linphone-history.db";
-//        mCallLogDatabaseFile = basePath + "/linphone-log-history.db";
-//        mFriendsDatabaseFile = basePath + "/linphone-friends.db";
         mErrorToneFile = basePath + "/error.wav";
         mUserCertificatePath = basePath;
 
         mR = c.getResources();
 
         mConnectivityManager = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
+        mAudioManager = ((AudioManager) c.getSystemService(Context.AUDIO_SERVICE));
+        mVibrator = (Vibrator) c.getSystemService(Context.VIBRATOR_SERVICE);
 
     }
 
@@ -106,7 +122,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         //instance.initOpenH264DownloadHelper();
 
         // H264 codec Management - set to auto mode -> MediaCodec >= android 5.0 >= OpenH264
-        //H264Helper.setH264Mode(H264Helper.MODE_AUTO, getLc());
+        H264Helper.setH264Mode(H264Helper.MODE_AUTO, getLc());
 
 
         return instance;
@@ -179,8 +195,6 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.setRootCA(mLinphoneRootCaFile);
         mLc.setPlayFile(mPauseSoundFile);
         mLc.setChatDatabasePath(mChatDatabaseFile);
-//        mLc.setCallLogsDatabasePath(mCallLogDatabaseFile);
-//        mLc.setFriendsDatabasePath(mFriendsDatabaseFile);
         mLc.setUserCertificatesPath(mUserCertificatePath);
         mLc.setNetworkReachable(true);
         //mLc.setCallErrorTone(Reason.NotFound, mErrorToneFile);
@@ -549,9 +563,202 @@ public class LinphoneManager implements LinphoneCoreListener {
 
     }
 
-    @Override
-    public void callState(LinphoneCore linphoneCore, LinphoneCall linphoneCall, LinphoneCall.State state, String s) {
+    private LinphoneCall ringingCall;
+    private boolean mAudioFocused;
 
+    @Override
+    public void callState(LinphoneCore lc, LinphoneCall call, LinphoneCall.State state, String message) {
+        LinLog.e(VoipHelper.VOIP_TAG, "New call state [" + state + "]");
+        if (state == LinphoneCall.State.IncomingReceived && !call.equals(lc.getCurrentCall())) {
+            if (call.getReplacedCall() != null) {
+                return;
+            }
+        }
+        if (state == LinphoneCall.State.IncomingReceived && getCallGsmON()) {
+            if (mLc != null) {
+                mLc.declineCall(call, Reason.Busy);
+            }
+        } else if (state == LinphoneCall.State.IncomingReceived || (state == LinphoneCall.State.CallIncomingEarlyMedia)) {
+            if (mLc.getCallsNb() == 1) {
+                requestAudioFocus(STREAM_RING);
+                ringingCall = call;
+                LinLog.e(VoipHelper.VOIP_TAG, "callState-->startRinging");
+                startRinging();
+            }
+        } else if (call == ringingCall && isRinging) {
+            //previous state was ringing, so stop ringing
+            LinLog.e(VoipHelper.VOIP_TAG, "callState-->stopRinging");
+            stopRinging();
+        }
+        if (state == LinphoneCall.State.Connected) {
+            if ((mLc != null ? mLc.getCallsNb() : 0) == 1) {
+                if (call.getDirection() == CallDirection.Incoming) {
+
+                    setAudioManagerInCallMode();
+                    //mAudioManager.abandonAudioFocus(null);
+                    requestAudioFocus(STREAM_VOICE_CALL);
+                }
+            }
+
+            if (Hacks.needSoftvolume()) {
+                org.linphone.mediastream.Log.w("Using soft volume audio hack");
+                adjustVolume(0); // Synchronize
+            }
+        }
+
+        if (state == LinphoneCall.State.CallEnd || state == LinphoneCall.State.Error) {
+            if (mLc != null && mLc.getCallsNb() == 0) {
+                if (mAudioFocused) {
+                    int res = mAudioManager.abandonAudioFocus(null);
+                    org.linphone.mediastream.Log.d("Audio focus released a bit later: " + (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "Granted" : "Denied"));
+                    mAudioFocused = false;
+                }
+
+            }
+        }
+
+        if (state == LinphoneCall.State.CallUpdatedByRemote) {
+            // If the correspondent proposes video while audio call
+            boolean remoteVideo = call.getRemoteParams().getVideoEnabled();
+            boolean localVideo = call.getCurrentParamsCopy().getVideoEnabled();
+            boolean autoAcceptCameraPolicy = false;
+            if (remoteVideo && !localVideo && !autoAcceptCameraPolicy && !LinphoneManager.getLc().isInConference()) {
+                try {
+                    LinphoneManager.getLc().deferCallUpdate(call);
+                } catch (LinphoneCoreException e) {
+                    org.linphone.mediastream.Log.e(e);
+                }
+            }
+        }
+
+        if (state == LinphoneCall.State.OutgoingInit) {
+            setAudioManagerInCallMode();
+            requestAudioFocus(STREAM_VOICE_CALL);
+        }
+
+        if (state == LinphoneCall.State.StreamsRunning) {
+            setAudioManagerInCallMode();
+        }
+
+
+    }
+
+    private void requestAudioFocus(int stream) {
+        if (!mAudioFocused) {
+            int res = 0;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                res = mAudioManager.requestAudioFocus(null, stream, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+            }
+            org.linphone.mediastream.Log.d("Audio focus requested: " + (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "Granted" : "Denied"));
+            if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) mAudioFocused = true;
+        }
+    }
+
+    private boolean isRinging;
+
+    private synchronized void startRinging() {
+        int readExternalStorage = PackageManager.PERMISSION_DENIED;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            readExternalStorage = mContext.getPackageManager().checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, mContext.getPackageName());
+        }
+        if (readExternalStorage != PackageManager.PERMISSION_GRANTED) {
+            routeAudioToSpeaker();
+            return;
+        }
+        routeAudioToSpeaker();
+        mAudioManager.setMode(MODE_RINGTONE);
+        try {
+            if ((mAudioManager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE || mAudioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) && mVibrator != null) {
+                long[] patern = {0, 1000, 1000};
+                mVibrator.vibrate(patern, 1);
+            }
+            if (mRingerPlayer == null) {
+                requestAudioFocus(STREAM_RING);
+                mRingerPlayer = new MediaPlayer();
+                mRingerPlayer.setAudioStreamType(STREAM_RING);
+                String ringtone = Settings.System.DEFAULT_RINGTONE_URI.toString();
+                try {
+                    if (ringtone.startsWith("content://")) {
+                        mRingerPlayer.setDataSource(mContext, Uri.parse(ringtone));
+                    } else {
+                        FileInputStream fis = new FileInputStream(ringtone);
+                        mRingerPlayer.setDataSource(fis.getFD());
+                        fis.close();
+                    }
+                } catch (IOException e) {
+                    org.linphone.mediastream.Log.e(e, "Cannot set ringtone");
+                }
+
+                mRingerPlayer.prepare();
+                mRingerPlayer.setLooping(true);
+                mRingerPlayer.start();
+            } else {
+                org.linphone.mediastream.Log.w("already ringing");
+            }
+        } catch (Exception e) {
+            org.linphone.mediastream.Log.e(e, "cannot handle incoming call");
+        }
+        isRinging = true;
+    }
+
+    private synchronized void stopRinging() {
+        if (mRingerPlayer != null) {
+            mRingerPlayer.stop();
+            mRingerPlayer.release();
+            mRingerPlayer = null;
+        }
+        if (mVibrator != null) {
+            mVibrator.cancel();
+        }
+
+        if (Hacks.needGalaxySAudioHack())
+            mAudioManager.setMode(AudioManager.MODE_NORMAL);
+
+        isRinging = false;
+        routeAudioToReceiver();
+    }
+
+
+    public void routeAudioToReceiver() {
+        routeAudioToSpeakerHelper(false);
+    }
+
+    public void routeAudioToSpeaker() {
+        routeAudioToSpeakerHelper(true);
+    }
+
+    private void routeAudioToSpeakerHelper(boolean speakerOn) {
+        org.linphone.mediastream.Log.w("Routing audio to " + (speakerOn ? "speaker" : "earpiece") + ", disabling bluetooth audio route");
+        mLc.enableSpeaker(speakerOn);
+    }
+
+
+    public void setAudioManagerInCallMode() {
+        if (mAudioManager.getMode() == AudioManager.MODE_IN_COMMUNICATION) {
+            org.linphone.mediastream.Log.w("[AudioManager] already in MODE_IN_COMMUNICATION, skipping...");
+            return;
+        }
+        org.linphone.mediastream.Log.d("[AudioManager] Mode: MODE_IN_COMMUNICATION");
+        LinLog.e(VoipHelper.VOIP_TAG, "callState-->setMode:MODE_IN_COMMUNICATION");
+        mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    }
+
+    private static final int LINPHONE_VOLUME_STREAM = STREAM_VOICE_CALL;
+    private static final int dbStep = 4;
+
+    public void adjustVolume(int i) {
+        if (Build.VERSION.SDK_INT < 15) {
+            int oldVolume = mAudioManager.getStreamVolume(LINPHONE_VOLUME_STREAM);
+            int maxVolume = mAudioManager.getStreamMaxVolume(LINPHONE_VOLUME_STREAM);
+
+            int nextVolume = oldVolume + i;
+            if (nextVolume > maxVolume) nextVolume = maxVolume;
+            if (nextVolume < 0) nextVolume = 0;
+
+            mLc.setPlaybackGain((nextVolume - maxVolume) * dbStep);
+        } else
+            // starting from ICS, volume must be adjusted by the application, at least for STREAM_VOICE_CALL volume stream
+            mAudioManager.adjustStreamVolume(LINPHONE_VOLUME_STREAM, i < 0 ? AudioManager.ADJUST_LOWER : AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
     }
 
     @Override

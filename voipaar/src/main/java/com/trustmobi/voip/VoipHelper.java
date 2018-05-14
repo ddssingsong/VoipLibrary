@@ -2,11 +2,9 @@ package com.trustmobi.voip;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.trustmobi.voip.callback.NarrowCallback;
-
-import org.linphone.core.LinphoneAuthInfo;
+import com.trustmobi.voip.callback.VoipCallBack;
 
 /**
  * Created by dds on 2018/3/17 0017.
@@ -14,13 +12,11 @@ import org.linphone.core.LinphoneAuthInfo;
 
 public class VoipHelper {
 
-    public static final String VOIP_TAG = "dds";
+    public static final String VOIP_TAG = "dds_voip";
 
     private NarrowCallback narrowCallback;
     private boolean isDebug;
     private boolean isToast;
-    private String encrypt;
-    private String decrypt;
 
 
     private static class VoipHolder {
@@ -32,20 +28,24 @@ public class VoipHelper {
     }
 
     //开启voip服务
-    public void startVoipService(Context context, String domain, String stun, String username, String pwd) {
+    public void startVoipService(Context context) {
         Intent intent = new Intent(Intent.ACTION_MAIN).setClass(context, LinphoneService.class);
-        intent.putExtra("domain",domain);
-        intent.putExtra("stun",stun);
-        intent.putExtra("username",username);
-        intent.putExtra("password",pwd);
         context.startService(intent);
+    }
+
+    //登录
+    public void register(String domain, String stun, String username, String pwd) {
+        if (LinphoneService.isReady()) {
+            LinphoneService.instance().initAuth(domain, stun, username, pwd);
+        }
 
     }
 
-    //清除账号
-    public void clearAuth() {
+    //删除帐号
+    public void unRegister() {
         LinphoneService.instance().clearAuth();
     }
+
 
     //拨打语音电话
     public void callAudio(Context context, String userName) {
@@ -59,26 +59,35 @@ public class VoipHelper {
         ChatActivity.openActivity(context, 0);
     }
 
+    // 开启悬浮窗
+    public void createNarrow(Context context) {
+        if (SettingsCompat.canDrawOverlays(context)) {
+            if (LinphoneService.isReady()) {
+                LinphoneService.instance().createNarrowView();
+            }
+        }
 
-    public String[] getAuth() {
-        if (!LinphoneManager.isInstanciated()) return null;
-        LinphoneAuthInfo authInfo = LinphoneManager.getInstance().getAuthInfo();
-        if (authInfo == null) return null;
-        String str[] = new String[3];
-        str[0] = authInfo.getDomain();
-        str[1] = authInfo.getUsername();
-        str[2] = authInfo.getPassword();
-        return str;
     }
 
 
+
+
+
+    //设置开启悬浮窗的回调
     public void setNarrowCallback(NarrowCallback narrowCallback) {
-        this.narrowCallback = narrowCallback;
+        if (LinphoneService.isReady()) {
+            LinphoneService.instance().setNarrowCallback(narrowCallback);
+        }
     }
 
-    public NarrowCallback getNarrowCallback() {
-        return narrowCallback;
+    //设置业务逻辑的回调
+    public void setVoipCallBack(VoipCallBack callBack) {
+        if (LinphoneService.isReady()) {
+            LinphoneService.instance().setCallBack(callBack);
+        }
+
     }
+
 
     public VoipHelper setDebug(boolean isDebug) {
         this.isDebug = isDebug;
