@@ -19,23 +19,24 @@ import android.view.WindowManager;
 import android.widget.Chronometer;
 import android.widget.Toast;
 
+import com.trustmobi.voip.bean.ChatInfo;
 import com.trustmobi.voip.callback.NarrowCallback;
 import com.trustmobi.voip.callback.VoipCallBack;
 import com.trustmobi.voip.callback.VoipCallBackDefault;
 import com.trustmobi.voip.voipaar.R;
 
-import org.linphone.core.CallDirection;
-import org.linphone.core.LinphoneAddress;
-import org.linphone.core.LinphoneAuthInfo;
-import org.linphone.core.LinphoneCall;
-import org.linphone.core.LinphoneCallLog;
-import org.linphone.core.LinphoneCore;
-import org.linphone.core.LinphoneCoreException;
-import org.linphone.core.LinphoneCoreFactory;
-import org.linphone.core.LinphoneCoreListenerBase;
-import org.linphone.core.LinphoneProxyConfig;
-import org.linphone.core.Reason;
-import org.linphone.mediastream.Version;
+import linphone.linphone.core.CallDirection;
+import linphone.linphone.core.LinphoneAddress;
+import linphone.linphone.core.LinphoneAuthInfo;
+import linphone.linphone.core.LinphoneCall;
+import linphone.linphone.core.LinphoneCallLog;
+import linphone.linphone.core.LinphoneCore;
+import linphone.linphone.core.LinphoneCoreException;
+import linphone.linphone.core.LinphoneCoreFactory;
+import linphone.linphone.core.LinphoneCoreListenerBase;
+import linphone.linphone.core.LinphoneProxyConfig;
+import linphone.linphone.core.Reason;
+import linphone.linphone.mediastream.Version;
 
 public class LinphoneService extends Service {
     public static final String START_LINPHONE_LOGS = " ==== Phone information dump ====";
@@ -98,8 +99,8 @@ public class LinphoneService extends Service {
     public void initAuth(String domain, String stun, String username, String pwd) {
         if (instance == null) return;
         try {
-            LinphoneAuthInfo authinfo = LinphoneManager.getLc().findAuthInfo(username, domain, domain);
-            if (authinfo == null) {
+//            LinphoneAuthInfo authinfo = LinphoneManager.getLc().findAuthInfo(username, domain, domain);
+//            if (authinfo == null) {
                 String identity = "sip:" + username + "@" + domain;
                 String proxy = "sip:" + username + "@" + domain;
                 LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
@@ -111,6 +112,8 @@ public class LinphoneService extends Service {
                 prxCfg.enableAvpf(false);
                 prxCfg.setAvpfRRInterval(0);
                 prxCfg.enableQualityReporting(false);
+                prxCfg.setQualityReportingCollector(null);
+                prxCfg.setQualityReportingInterval(0);
                 LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, pwd, null, null, domain);
                 LinphoneManager.getLc().addProxyConfig(prxCfg);
                 LinphoneManager.getLc().addAuthInfo(authInfo);
@@ -120,10 +123,10 @@ public class LinphoneService extends Service {
                     LinphoneManager.getInstance().setIceEnabled(true);
                 }
                 LinLog.e(VoipHelper.VOIP_TAG, "VoipService startLinphoneAuthInfo  -->addAuthInfo");
-            } else {
-                refreshRegister();
-                LinLog.e(VoipHelper.VOIP_TAG, "VoipService startLinphoneAuthInfo  -->refreshRegister");
-            }
+//            } else {
+//                refreshRegister();
+//                LinLog.e(VoipHelper.VOIP_TAG, "VoipService startLinphoneAuthInfo  -->refreshRegister");
+//            }
         } catch (LinphoneCoreException e) {
             e.printStackTrace();
         }
@@ -153,6 +156,15 @@ public class LinphoneService extends Service {
                 if (instance == null) {
                     LinLog.e(VoipHelper.VOIP_TAG, "Service not ready, discarding call state change to " + state.toString());
                     return;
+                }
+
+                if (state == LinphoneCall.State.IncomingReceived || state == LinphoneCall.State.OutgoingInit) {
+                    LinphoneAddress remoteAddress = call.getRemoteAddress();
+                    String userId = remoteAddress.getUserName();
+                    if (callBack != null) {
+                        ChatInfo chatInfo = callBack.getChatInfo(userId);
+                        VoipHelper.getInstance().setChatInfo(chatInfo);
+                    }
                 }
                 //=================================来电话时===================================================
                 boolean invisible = false;

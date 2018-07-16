@@ -3,8 +3,11 @@ package com.trustmobi.voip;
 import android.content.Context;
 import android.content.Intent;
 
+import com.trustmobi.voip.bean.ChatInfo;
 import com.trustmobi.voip.callback.NarrowCallback;
 import com.trustmobi.voip.callback.VoipCallBack;
+
+import linphone.linphone.core.LinphoneCore;
 
 /**
  * Created by dds on 2018/3/17 0017.
@@ -14,9 +17,10 @@ public class VoipHelper {
 
     public static final String VOIP_TAG = "dds_voip";
 
-    private NarrowCallback narrowCallback;
     private boolean isDebug;
     private boolean isToast;
+    //通话界面显示的内容
+    private ChatInfo chatInfo;
 
 
     private static class VoipHolder {
@@ -69,10 +73,6 @@ public class VoipHelper {
 
     }
 
-
-
-
-
     //设置开启悬浮窗的回调
     public void setNarrowCallback(NarrowCallback narrowCallback) {
         if (LinphoneService.isReady()) {
@@ -107,5 +107,26 @@ public class VoipHelper {
         isToast = toast;
     }
 
+    public ChatInfo getChatInfo() {
+        return chatInfo;
+    }
 
+    public void setChatInfo(ChatInfo chatInfo) {
+        this.chatInfo = chatInfo;
+    }
+
+
+    public void setEnableSrtp(boolean enableSrtp) {
+        if (LinphoneService.isReady()) {
+            LinphoneManager.getInstance().setMediaEncryption(enableSrtp ? LinphoneCore.MediaEncryption.SRTP : LinphoneCore.MediaEncryption.None);
+        }
+    }
+
+    public boolean getEnableSrtp() {
+        if (LinphoneService.isReady()) {
+            LinphoneCore.MediaEncryption encryption = LinphoneManager.getInstance().getMediaEncryption();
+            return encryption == LinphoneCore.MediaEncryption.SRTP;
+        }
+        return false;
+    }
 }

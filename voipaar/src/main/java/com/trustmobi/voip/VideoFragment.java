@@ -20,12 +20,12 @@ import com.trustmobi.voip.compatibility.CompatibilityScaleGestureListener;
 import com.trustmobi.voip.utils.LinphoneUtils;
 import com.trustmobi.voip.voipaar.R;
 
-import org.linphone.core.LinphoneCall;
-import org.linphone.core.LinphoneCore;
-import org.linphone.core.VideoSize;
-import org.linphone.mediastream.Log;
-import org.linphone.mediastream.video.AndroidVideoWindowImpl;
-import org.linphone.mediastream.video.capture.hwconf.AndroidCameraConfiguration;
+import linphone.linphone.core.LinphoneCall;
+import linphone.linphone.core.LinphoneCore;
+import linphone.linphone.core.VideoSize;
+import linphone.linphone.mediastream.Log;
+import linphone.linphone.mediastream.video.AndroidVideoWindowImpl;
+import linphone.linphone.mediastream.video.capture.hwconf.AndroidCameraConfiguration;
 
 /**
  * Created by dds on 2018/3/22.

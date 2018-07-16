@@ -25,7 +25,7 @@ import android.provider.Settings;
 import android.text.Html;
 import android.text.Spanned;
 
-import org.linphone.mediastream.Version;
+import linphone.linphone.mediastream.Version;
 
 public class Compatibility {
 //	public static void CreateChannel(Context context) {

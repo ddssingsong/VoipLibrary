@@ -1,5 +1,7 @@
 package com.trustmobi.voip.callback;
 
+import com.trustmobi.voip.bean.ChatInfo;
+
 /**
  * Created by dds on 2018/5/9.
  * android_shuai@163.com
@@ -17,5 +19,7 @@ public interface VoipCallBack {
     // 接收的电话挂断
     void terminateIncomingCall(String friendId, String message, boolean isMiss);
 
+    //获取需要在界面上显示的用户信息
+    ChatInfo getChatInfo(String userId);
 
 }

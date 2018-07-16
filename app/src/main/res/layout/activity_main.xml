@@ -29,8 +29,7 @@
                 android:id="@+id/domain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="服务器地址"
-                />
+                android:hint="服务器地址" />
 
             <EditText
                 android:id="@+id/username"
@@ -52,6 +51,7 @@
                 android:onClick="login"
                 android:text="登陸"
                 android:textAllCaps="false" />
+
 
             <Button
                 android:id="@+id/button6"

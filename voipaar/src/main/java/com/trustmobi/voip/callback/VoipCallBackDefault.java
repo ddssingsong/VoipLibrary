@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.trustmobi.voip.LinLog;
 import com.trustmobi.voip.VoipHelper;
+import com.trustmobi.voip.bean.ChatInfo;
 
 /**
  * Created by dds on 2018/5/11.
@@ -31,5 +32,11 @@ public class VoipCallBackDefault implements VoipCallBack {
     @Override
     public void terminateIncomingCall(String friendId, String message, boolean isMiss) {
         LinLog.e(VoipHelper.VOIP_TAG, "terminateIncomingCall friendId:" + friendId + ",message:" + message + ",isMiss:" + isMiss);
+    }
+
+    @Override
+    public ChatInfo getChatInfo(String userId) {
+        LinLog.e(VoipHelper.VOIP_TAG, "getChatInfo friendId:" + userId);
+        return null;
     }
 }

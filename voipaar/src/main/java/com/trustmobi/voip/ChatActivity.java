@@ -22,20 +22,25 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.trustmobi.voip.bean.ChatInfo;
 import com.trustmobi.voip.utils.LinphoneUtils;
 import com.trustmobi.voip.voipaar.R;
 import com.trustmobi.voip.widget.ComButton;
+import com.trustmobi.voip.widget.GlideRoundTransform;
 
-import org.linphone.core.CallDirection;
-import org.linphone.core.LinphoneCall;
-import org.linphone.core.LinphoneCallParams;
-import org.linphone.core.LinphoneCore;
-import org.linphone.core.LinphoneCoreListenerBase;
-import org.linphone.core.Reason;
+import linphone.linphone.core.CallDirection;
+import linphone.linphone.core.LinphoneCall;
+import linphone.linphone.core.LinphoneCallParams;
+import linphone.linphone.core.LinphoneCore;
+import linphone.linphone.core.LinphoneCoreListenerBase;
+import linphone.linphone.core.Reason;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import linphone.linphone.mediastream.Log;
 
 public class ChatActivity extends Activity implements ComButton.onComClick, View.OnClickListener {
 
@@ -68,7 +73,7 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
     // 0 播出电话 1 接听电话  2 通话中
     public static void openActivity(Context context, int chatType) {
         Intent intent = new Intent(context, ChatActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("chatType", chatType);
         context.startActivity(intent);
     }
@@ -105,14 +110,12 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
         super.onResume();
         LinphoneCore lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
         if (lc != null) {
-            lc.addListener(mListener);
             isSpeakerEnabled = lc.isSpeakerEnabled();
             voip_chat_hands_free.setImageResource(isSpeakerEnabled ? R.drawable.hands_free : R.drawable.btn_voice_hand_free);
             isMicMuted = lc.isMicMuted();
             voip_chat_mute.setImageResource(isMicMuted ? R.drawable.mute : R.drawable.btn_voice_mute);
+            lc.addListener(mListener);
         }
-
-
     }
 
     @Override
@@ -157,13 +160,13 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             voip_voice_chatting.setVisibility(View.VISIBLE);
             voip_chat_mute.setEnable(false);
             lookupOutgoingCall();
-            updateChatStateTips("正在呼叫中...");
+            updateChatStateTips(getString(R.string.voice_chat_calling));
         } else if (chatType == 1) {
             //来电话界面
             voip_chat_incoming.setVisibility(View.VISIBLE);
             voip_voice_chatting.setVisibility(View.INVISIBLE);
             lookupIncomingCall();
-            updateChatStateTips("邀请您进行语音通话...");
+            updateChatStateTips(getString(R.string.voice_chat_invite));
         } else {
             //正在通话中
             voip_chat_incoming.setVisibility(View.INVISIBLE);
@@ -184,11 +187,11 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             getFragmentManager().beginTransaction().add(R.id.voip_fl_video, videoCallFragment).commitAllowingStateLoss();
         }
         //显示头像和昵称
-//        DisplayCallback callback = VoipHelper.getInstance().getDisplayCallback();
-//        if (callback != null) {
-//            Glide.with(this).load(callback.getDisplayInfo().getAvatar()).into(voip_voice_chat_avatar);
-//            voice_chat_friend_name.setText(callback.getDisplayInfo().getNickName());
-//        }
+        ChatInfo info = VoipHelper.getInstance().getChatInfo();
+        if (info != null) {
+            Glide.with(this).load(info.getRemoteAvatar()).transform(new GlideRoundTransform(this)).into(voip_voice_chat_avatar);
+            voice_chat_friend_name.setText(info.getRemoteNickName());
+        }
     }
 
     private void lookupOutgoingCall() {
@@ -282,7 +285,6 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
                 }
 
 
-
             }
         };
     }
@@ -304,16 +306,21 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
             toggleMicro();
 
         } else if (id == R.id.voip_chat_cancel) {
-            if (mCall.getState() == LinphoneCall.State.StreamsRunning ||
-                    mCall.getState() == LinphoneCall.State.Paused ||
-                    mCall.getState() == LinphoneCall.State.PausedByRemote ||
-                    mCall.getState() == LinphoneCall.State.Connected
-                    ) {
-                hangUp();
+            if (mCall != null) {
+                if (mCall.getState() == LinphoneCall.State.StreamsRunning ||
+                        mCall.getState() == LinphoneCall.State.Paused ||
+                        mCall.getState() == LinphoneCall.State.PausedByRemote ||
+                        mCall.getState() == LinphoneCall.State.Connected
+                        ) {
+                    hangUp();
 
+                } else {
+                    declineOutgoing();
+                }
             } else {
-                declineOutgoing();
+                finish();
             }
+
 
         } else if (id == R.id.voip_chat_hands_free) {
             toggleSpeaker();
@@ -336,7 +343,7 @@ public class ChatActivity extends Activity implements ComButton.onComClick, View
         if (params != null) {
             params.enableLowBandwidth(isLowBandwidthConnection);
         } else {
-            org.linphone.mediastream.Log.e("Could not create call params for call");
+            Log.e("Could not create call params for call");
         }
 
         if (params == null || !LinphoneManager.getInstance().acceptCallWithParams(mCall, params)) {

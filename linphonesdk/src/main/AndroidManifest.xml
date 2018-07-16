@@ -1,0 +1,30 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.dds.tbs.linphonesdk">
+
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+
+    <application>
+        <receiver android:name="com.trustmobi.mixin.voip.recevier.PhoneStateChangedReceiver">
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+
+        <service
+            android:name="com.trustmobi.mixin.voip.VoipService"
+            android:enabled="true"
+            android:exported="true" />
+
+
+        <activity
+            android:name="com.trustmobi.mixin.voip.VoipActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+    </application>
+</manifest>

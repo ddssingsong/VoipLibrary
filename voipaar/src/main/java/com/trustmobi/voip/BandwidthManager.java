@@ -19,8 +19,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-import org.linphone.core.LinphoneCallParams;
-import org.linphone.core.LinphoneCore;
+import linphone.linphone.core.LinphoneCallParams;
+import linphone.linphone.core.LinphoneCore;
 
 public class BandwidthManager {
 

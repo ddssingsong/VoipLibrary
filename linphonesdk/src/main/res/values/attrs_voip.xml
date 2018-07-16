@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ComButton">
+        <attr name="voip_src" format="reference|integer" />
+        <attr name="voip_enable" format="boolean" />
+        <attr name="voip_text" format="string" />
+    </declare-styleable>
+</resources>

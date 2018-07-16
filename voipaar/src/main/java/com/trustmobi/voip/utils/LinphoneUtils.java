@@ -5,7 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
-import org.linphone.core.LinphoneCall;
+import linphone.linphone.core.LinphoneCall;
 
 /**
  * Created by Administrator on 2018/3/18 0018.

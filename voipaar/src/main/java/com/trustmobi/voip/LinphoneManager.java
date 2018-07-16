@@ -17,33 +17,33 @@ import android.util.Log;
 import com.trustmobi.voip.utils.LinphoneUtils;
 import com.trustmobi.voip.voipaar.R;
 
-import org.linphone.core.CallDirection;
-import org.linphone.core.LinphoneAddress;
-import org.linphone.core.LinphoneAuthInfo;
-import org.linphone.core.LinphoneCall;
-import org.linphone.core.LinphoneCallParams;
-import org.linphone.core.LinphoneCallStats;
-import org.linphone.core.LinphoneChatMessage;
-import org.linphone.core.LinphoneChatRoom;
-import org.linphone.core.LinphoneContent;
-import org.linphone.core.LinphoneCore;
-import org.linphone.core.LinphoneCoreException;
-import org.linphone.core.LinphoneCoreFactory;
-import org.linphone.core.LinphoneCoreListener;
-import org.linphone.core.LinphoneEvent;
-import org.linphone.core.LinphoneFriend;
-import org.linphone.core.LinphoneFriendList;
-import org.linphone.core.LinphoneInfoMessage;
-import org.linphone.core.LinphoneNatPolicy;
-import org.linphone.core.LinphoneProxyConfig;
-import org.linphone.core.PresenceBasicStatus;
-import org.linphone.core.PublishState;
-import org.linphone.core.Reason;
-import org.linphone.core.SubscriptionState;
-import org.linphone.mediastream.Version;
-import org.linphone.mediastream.video.capture.hwconf.AndroidCameraConfiguration;
-import org.linphone.mediastream.video.capture.hwconf.Hacks;
-import org.linphone.tools.H264Helper;
+import linphone.linphone.core.CallDirection;
+import linphone.linphone.core.LinphoneAddress;
+import linphone.linphone.core.LinphoneAuthInfo;
+import linphone.linphone.core.LinphoneCall;
+import linphone.linphone.core.LinphoneCallParams;
+import linphone.linphone.core.LinphoneCallStats;
+import linphone.linphone.core.LinphoneChatMessage;
+import linphone.linphone.core.LinphoneChatRoom;
+import linphone.linphone.core.LinphoneContent;
+import linphone.linphone.core.LinphoneCore;
+import linphone.linphone.core.LinphoneCoreException;
+import linphone.linphone.core.LinphoneCoreFactory;
+import linphone.linphone.core.LinphoneCoreListener;
+import linphone.linphone.core.LinphoneEvent;
+import linphone.linphone.core.LinphoneFriend;
+import linphone.linphone.core.LinphoneFriendList;
+import linphone.linphone.core.LinphoneInfoMessage;
+import linphone.linphone.core.LinphoneNatPolicy;
+import linphone.linphone.core.LinphoneProxyConfig;
+import linphone.linphone.core.PresenceBasicStatus;
+import linphone.linphone.core.PublishState;
+import linphone.linphone.core.Reason;
+import linphone.linphone.core.SubscriptionState;
+import linphone.linphone.mediastream.Version;
+import linphone.linphone.mediastream.video.capture.hwconf.AndroidCameraConfiguration;
+import linphone.linphone.mediastream.video.capture.hwconf.Hacks;
+import linphone.linphone.tools.H264Helper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -122,7 +122,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         //instance.initOpenH264DownloadHelper();
 
         // H264 codec Management - set to auto mode -> MediaCodec >= android 5.0 >= OpenH264
-        H264Helper.setH264Mode(H264Helper.MODE_AUTO, getLc());
+        H264Helper.setH264Mode(H264Helper.MODE_MEDIA_CODEC, getLc());
 
 
         return instance;
@@ -180,30 +180,23 @@ public class LinphoneManager implements LinphoneCoreListener {
 
     private synchronized void initLiblinphone(LinphoneCore lc) throws LinphoneCoreException {
         mLc = lc;
-        mLc.setZrtpSecretsCache(basePath + "/zrtp_secrets");
-        try {
-            String versionName = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0).versionName;
-            if (versionName == null) {
-                versionName = String.valueOf(mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0).versionCode);
-            }
-            mLc.setUserAgent("LinphoneAndroid", versionName);
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e("dds", "cannot get version name");
-        }
-
         mLc.setRingback(mRingbackSoundFile);
         mLc.setRootCA(mLinphoneRootCaFile);
         mLc.setPlayFile(mPauseSoundFile);
         mLc.setChatDatabasePath(mChatDatabaseFile);
         mLc.setUserCertificatesPath(mUserCertificatePath);
         mLc.setNetworkReachable(true);
-        //mLc.setCallErrorTone(Reason.NotFound, mErrorToneFile);
-        enableDeviceRingtone(false);
+        mLc.enableEchoCancellation(true);
+        enableDeviceRingtone(true);
 
         int availableCores = Runtime.getRuntime().availableProcessors();
-        Log.w("dds", "MediaStreamer : " + availableCores + " cores detected and configured");
         mLc.setCpuCount(availableCores);
         mLc.migrateCallLogs();
+        //设置加密方式，如果改为Srtp则使用自己改的加密
+        LinphoneCore.MediaEncryption menc = LinphoneCore.MediaEncryption.SRTP;
+        mLc.setMediaEncryption(menc);
+
+
         resetCameraFromPreferences();
 
         Log.e("dds_test", "initLiblinphone----------------------");
@@ -333,7 +326,7 @@ public class LinphoneManager implements LinphoneCoreListener {
             LinphoneAuthInfo authInfo = getLc().findAuthInfo(addr.getUserName(), null, addr.getDomain());
             return authInfo;
         } catch (LinphoneCoreException e) {
-            org.linphone.mediastream.Log.e(e);
+            linphone.linphone.mediastream.Log.e(e);
         }
         return null;
     }
@@ -346,7 +339,7 @@ public class LinphoneManager implements LinphoneCoreListener {
             LinphoneAuthInfo authInfo = getLc().findAuthInfo(addr.getUserName(), null, addr.getDomain());
             return authInfo;
         } catch (LinphoneCoreException e) {
-            org.linphone.mediastream.Log.e(e);
+            linphone.linphone.mediastream.Log.e(e);
         }
 
         return null;
@@ -398,6 +391,19 @@ public class LinphoneManager implements LinphoneCoreListener {
     }
 
 
+    public void setMediaEncryption(LinphoneCore.MediaEncryption menc) {
+        if (mLc != null) {
+            mLc.setMediaEncryption(menc);
+        }
+    }
+
+    public LinphoneCore.MediaEncryption getMediaEncryption() {
+        if (mLc != null) {
+            return mLc.getMediaEncryption();
+        }
+        return LinphoneCore.MediaEncryption.None;
+    }
+
     public static synchronized void destroy() {
         if (instance == null) return;
         getInstance().changeStatusToOffline();
@@ -429,7 +435,7 @@ public class LinphoneManager implements LinphoneCoreListener {
 
     public boolean acceptCallWithParams(LinphoneCall call, LinphoneCallParams params) {
         try {
-            mLc.acceptCallWithParams(call, params);
+            mLc.acceptCallWithParams(call, params, "1234567890123456789012345678901234567890");
             return true;
         } catch (LinphoneCoreException e) {
             Log.i("dds", "Accept call failed");
@@ -601,7 +607,7 @@ public class LinphoneManager implements LinphoneCoreListener {
             }
 
             if (Hacks.needSoftvolume()) {
-                org.linphone.mediastream.Log.w("Using soft volume audio hack");
+                linphone.linphone.mediastream.Log.w("Using soft volume audio hack");
                 adjustVolume(0); // Synchronize
             }
         }
@@ -610,7 +616,7 @@ public class LinphoneManager implements LinphoneCoreListener {
             if (mLc != null && mLc.getCallsNb() == 0) {
                 if (mAudioFocused) {
                     int res = mAudioManager.abandonAudioFocus(null);
-                    org.linphone.mediastream.Log.d("Audio focus released a bit later: " + (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "Granted" : "Denied"));
+                    linphone.linphone.mediastream.Log.d("Audio focus released a bit later: " + (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "Granted" : "Denied"));
                     mAudioFocused = false;
                 }
 
@@ -626,7 +632,7 @@ public class LinphoneManager implements LinphoneCoreListener {
                 try {
                     LinphoneManager.getLc().deferCallUpdate(call);
                 } catch (LinphoneCoreException e) {
-                    org.linphone.mediastream.Log.e(e);
+                    linphone.linphone.mediastream.Log.e(e);
                 }
             }
         }
@@ -649,7 +655,7 @@ public class LinphoneManager implements LinphoneCoreListener {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                 res = mAudioManager.requestAudioFocus(null, stream, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
             }
-            org.linphone.mediastream.Log.d("Audio focus requested: " + (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "Granted" : "Denied"));
+            linphone.linphone.mediastream.Log.d("Audio focus requested: " + (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ? "Granted" : "Denied"));
             if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) mAudioFocused = true;
         }
     }
@@ -686,17 +692,17 @@ public class LinphoneManager implements LinphoneCoreListener {
                         fis.close();
                     }
                 } catch (IOException e) {
-                    org.linphone.mediastream.Log.e(e, "Cannot set ringtone");
+                    linphone.linphone.mediastream.Log.e(e, "Cannot set ringtone");
                 }
 
                 mRingerPlayer.prepare();
                 mRingerPlayer.setLooping(true);
                 mRingerPlayer.start();
             } else {
-                org.linphone.mediastream.Log.w("already ringing");
+                linphone.linphone.mediastream.Log.w("already ringing");
             }
         } catch (Exception e) {
-            org.linphone.mediastream.Log.e(e, "cannot handle incoming call");
+            linphone.linphone.mediastream.Log.e(e, "cannot handle incoming call");
         }
         isRinging = true;
     }
@@ -728,17 +734,17 @@ public class LinphoneManager implements LinphoneCoreListener {
     }
 
     private void routeAudioToSpeakerHelper(boolean speakerOn) {
-        org.linphone.mediastream.Log.w("Routing audio to " + (speakerOn ? "speaker" : "earpiece") + ", disabling bluetooth audio route");
+        linphone.linphone.mediastream.Log.w("Routing audio to " + (speakerOn ? "speaker" : "earpiece") + ", disabling bluetooth audio route");
         mLc.enableSpeaker(speakerOn);
     }
 
 
     public void setAudioManagerInCallMode() {
         if (mAudioManager.getMode() == AudioManager.MODE_IN_COMMUNICATION) {
-            org.linphone.mediastream.Log.w("[AudioManager] already in MODE_IN_COMMUNICATION, skipping...");
+            linphone.linphone.mediastream.Log.w("[AudioManager] already in MODE_IN_COMMUNICATION, skipping...");
             return;
         }
-        org.linphone.mediastream.Log.d("[AudioManager] Mode: MODE_IN_COMMUNICATION");
+        linphone.linphone.mediastream.Log.d("[AudioManager] Mode: MODE_IN_COMMUNICATION");
         LinLog.e(VoipHelper.VOIP_TAG, "callState-->setMode:MODE_IN_COMMUNICATION");
         mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
     }
