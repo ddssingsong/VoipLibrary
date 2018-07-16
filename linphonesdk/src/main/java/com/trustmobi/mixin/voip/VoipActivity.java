@@ -87,17 +87,23 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
 
     private int chatType;
     public static final String CHAT_TYPE = "chatType";
+    private boolean isVideo;
+    public static final String IS_VIDEO = "isVideo";
 
     // 0 播出电话 1 接听电话  2 通话中
     public static void openActivity(Context context, int chatType) {
+        openActivity(context, chatType, false);
+    }
+
+    public static void openActivity(Context context, int chatType, boolean isVideo) {
         if (VoipService.isReady()) {
             Intent intent = new Intent(context, VoipActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra(CHAT_TYPE, chatType);
+            intent.putExtra(IS_VIDEO, isVideo);
             context.startActivity(intent);
         }
     }
-
 
     public static final int CALL = 0x001;
     private VoipHandler voipHandler = new VoipHandler();
@@ -132,7 +138,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     private void initFragment() {
         if (fragmentContainer != null) {
             Fragment callFragment;
-            if (isVideoEnabled(LinphoneManager.getLc().getCurrentCall())) {
+            if (isVideoEnabled(LinphoneManager.getLc().getCurrentCall()) || isVideo) {
                 callFragment = new CallVideoFragment();
                 videoCallFragment = (CallVideoFragment) callFragment;
                 //displayVideoCall(false);
@@ -232,7 +238,8 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
 
     private void initVar() {
         Intent intent = getIntent();
-        chatType = intent.getIntExtra("chatType", 0);
+        chatType = intent.getIntExtra(CHAT_TYPE, 0);
+        isVideo = intent.getBooleanExtra(IS_VIDEO, false);
         if (chatType == NOTIFY_OUTGOING) {
             //播出电话
             voip_chat_incoming.setVisibility(View.INVISIBLE);

@@ -75,7 +75,7 @@ public class VoipHelper {
                 randomKey = randomData;
                 isInCall = true;
                 isVideoEnale = isVideoEnable;
-                VoipActivity.openActivity(context, NOTIFY_OUTGOING);
+                VoipActivity.openActivity(context, NOTIFY_OUTGOING,isVideoEnable);
             } else {
                 Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
             }
