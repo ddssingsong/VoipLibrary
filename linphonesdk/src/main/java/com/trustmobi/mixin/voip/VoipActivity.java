@@ -354,7 +354,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                     //建立通话
                     if (state == LinphoneCall.State.StreamsRunning) {
                         if (isVideoEnabled(call)) {
-                            switchVideo(true);
+                            switchVideo();
                         } else {
                             LinphoneManager.getLc().enableSpeaker(false);
                             registerCallDurationTimer(null, call);
@@ -635,27 +635,22 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         audioCallFragment = fragment;
     }
 
-    private void switchVideo(final boolean displayVideo) {
+    private void switchVideo() {
         final LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
         if (call == null) {
             return;
         }
-
         //Check if the call is not terminated
         if (call.getState() == LinphoneCall.State.CallEnd || call.getState() == LinphoneCall.State.CallReleased)
             return;
-
-        if (!displayVideo) {
-            showAudioView();
+        if (!call.getRemoteParams().isLowBandwidthEnabled()) {
+            LinphoneManager.getInstance().addVideo();
+            if (videoCallFragment == null || !videoCallFragment.isVisible())
+                showVideoView();
         } else {
-            if (!call.getRemoteParams().isLowBandwidthEnabled()) {
-                LinphoneManager.getInstance().addVideo();
-                if (videoCallFragment == null || !videoCallFragment.isVisible())
-                    showVideoView();
-            } else {
-                displayCustomToast(getString(R.string.error_low_bandwidth), Toast.LENGTH_LONG);
-            }
+            displayCustomToast(getString(R.string.error_low_bandwidth), Toast.LENGTH_LONG);
         }
+
     }
 
     private void showAudioView() {
