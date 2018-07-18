@@ -51,6 +51,7 @@ import java.util.TimerTask;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.trustmobi.mixin.voip.LinphoneManager.NOT_ANSWER_TIME;
+import static com.trustmobi.mixin.voip.LinphoneManager.getLc;
 import static com.trustmobi.mixin.voip.VoipActivity.CHAT_TYPE;
 
 /**
@@ -117,7 +118,7 @@ public class VoipService extends Service {
     private LinphoneCoreListenerBase mListener;
 
     private void initListener() {
-        LinphoneManager.getLc().addListener(mListener = new LinphoneCoreListenerBase() {
+        getLc().addListener(mListener = new LinphoneCoreListenerBase() {
             @Override
             public void globalState(LinphoneCore lc, LinphoneCore.GlobalState state, String message) {
 
@@ -125,7 +126,7 @@ public class VoipService extends Service {
 
             @Override
             public void registrationState(LinphoneCore lc, LinphoneProxyConfig cfg, LinphoneCore.RegistrationState state, String smessage) {
-                if (state == LinphoneCore.RegistrationState.RegistrationOk && LinphoneManager.getLc().getDefaultProxyConfig() != null && LinphoneManager.getLc().getDefaultProxyConfig().isRegistered()) {
+                if (state == LinphoneCore.RegistrationState.RegistrationOk && getLc().getDefaultProxyConfig() != null && getLc().getDefaultProxyConfig().isRegistered()) {
                     LinLog.e("dds_voip", "login success");
                     if (isDebug) {
                         displayCustomToast("login success");
@@ -141,7 +142,7 @@ public class VoipService extends Service {
                     LinLog.e(VoipHelper.TAG, "Service not ready, discarding call state change to " + state.toString());
                     return;
                 }
-                LinphoneCall currentCall = LinphoneManager.getLc().getCurrentCall();
+                LinphoneCall currentCall = getLc().getCurrentCall();
                 if (currentCall != null && call != currentCall) {
                     return;
                 }
@@ -169,13 +170,16 @@ public class VoipService extends Service {
                     }
                     if (invisible) {
                         if (!LinphoneManager.getInstance().getCallGsmON()) {
-                            if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
-                                VoipActivity.openActivity(VoipService.this, NOTIFY_INCOMING);
+                            if (getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
+                                boolean isVideo = call.getRemoteParams() != null && call.getRemoteParams().getVideoEnabled() && getLc().getVideoAutoAcceptPolicy();
+                                VoipActivity.openActivity(VoipService.this, NOTIFY_INCOMING ,isVideo);
+
+
                                 sendNotification(NOTIFY_INCOMING, getString(R.string.voice_chat_notifi_content));
                             }
                         }
                     } else {
-                        LinphoneManager.getLc().declineCall(call, Reason.Busy);
+                        getLc().declineCall(call, Reason.Busy);
                     }
 
                 }
@@ -188,7 +192,7 @@ public class VoipService extends Service {
                     sendNotification(NOTIFY_CALL, getString(R.string.voice_chat_notifi_content));
                     stopTimer();
                     //如果是播出电话，并且在后台状态，就打开界面
-                    if (LinphoneManager.getLc().getCurrentCall().getDirection() == CallDirection.Outgoing) {
+                    if (getLc().getCurrentCall().getDirection() == CallDirection.Outgoing) {
                         VoipActivity.openActivity(VoipService.this, NOTIFY_CALL);
                         removeNarrow();
                     }
@@ -316,22 +320,22 @@ public class VoipService extends Service {
         if (instance == null) return;
         LinLog.e("startLinphoneAuthInfo", "VoipService startLinphoneAuthInfo");
         try {
-            LinphoneAuthInfo authinfo = LinphoneManager.getLc().findAuthInfo(username, null, domain);
+            LinphoneAuthInfo authinfo = getLc().findAuthInfo(username, null, domain);
             if (authinfo == null) {
                 String identity = "sip:" + username + "@" + domain;
                 String proxy = "sip:" + username + "@" + domain;
                 LinphoneAddress proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identity);
                 LinphoneAddress identityAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy);
                 proxyAddr.setTransport(LinphoneAddress.TransportType.LinphoneTransportTcp);
-                LinphoneProxyConfig prxCfg = LinphoneManager.getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
+                LinphoneProxyConfig prxCfg = getLc().createProxyConfig(identityAddr.asString(), proxyAddr.asStringUriOnly(), null, true);
                 prxCfg.setExpires(1800);
                 prxCfg.enableQualityReporting(false);
                 prxCfg.enableAvpf(false);
                 prxCfg.setAvpfRRInterval(0);
                 LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(username, null, pwd, null, null, domain);
-                LinphoneManager.getLc().addProxyConfig(prxCfg);
-                LinphoneManager.getLc().addAuthInfo(authInfo);
-                LinphoneManager.getLc().setDefaultProxyConfig(prxCfg);
+                getLc().addProxyConfig(prxCfg);
+                getLc().addAuthInfo(authInfo);
+                getLc().setDefaultProxyConfig(prxCfg);
                 if (!TextUtils.isEmpty(stun)) {
                     LinphoneManager.getInstance().setStunServer(stun);
                     LinphoneManager.getInstance().setIceEnabled(true);
@@ -349,15 +353,15 @@ public class VoipService extends Service {
 
     public void unRegisterAuthInfo() {
         if (instance == null) return;
-        if (LinphoneManager.getLc() != null) {
+        if (getLc() != null) {
             LinphoneManager.getInstance().deleteAllAccount();
 
         }
     }
 
     public void refreshRegister() {
-        if (LinphoneManager.getLc() != null) {
-            LinphoneManager.getLc().refreshRegisters();
+        if (getLc() != null) {
+            getLc().refreshRegisters();
         }
     }
 
@@ -447,7 +451,7 @@ public class VoipService extends Service {
 
     //打开通话界面
     private void openActivity() {
-        LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
+        LinphoneCall call = getLc().getCurrentCall();
         if (call != null) {
             if (call.getState() == LinphoneCall.State.StreamsRunning ||
                     call.getState() == LinphoneCall.State.Connected ||
@@ -478,12 +482,12 @@ public class VoipService extends Service {
     }
 
     public synchronized void addNarrow() {
-        LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
+        LinphoneCall call = getLc().getCurrentCall();
         if (call != null) {
             try {
                 if (mWindowManager != null && narrowView != null && mLayout != null) {
                     mWindowManager.addView(narrowView, mLayout);
-                    LinphoneManager.getLc().enableSpeaker(true);
+                    getLc().enableSpeaker(true);
                     if (call.getState() == LinphoneCall.State.StreamsRunning ||
                             call.getState() == LinphoneCall.State.PausedByRemote ||
                             call.getState() == LinphoneCall.State.Paused ||
@@ -713,7 +717,7 @@ public class VoipService extends Service {
                             refreshRegister();
                         } else {
                             refreshRegister();
-                            if (LinphoneManager.getLc() != null) {
+                            if (getLc() != null) {
                                 hangUp();
                             }
                         }
@@ -728,7 +732,7 @@ public class VoipService extends Service {
     }
 
     private void hangUp() {
-        LinphoneCore lc = LinphoneManager.getLc();
+        LinphoneCore lc = getLc();
         LinphoneCall currentCall = lc.getCurrentCall();
         if (currentCall != null) {
             lc.terminateCall(currentCall);

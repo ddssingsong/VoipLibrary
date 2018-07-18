@@ -14,7 +14,7 @@ import com.trustmobi.mixin.voip.callback.VoipCallBack;
 
 public class VoipUtil {
 
-    public static String serverUrl = "sip.linphone.org";
+    public static String serverUrl = "192.168.1.30:20982";
 
     // 开启Voip服务
     public static void startService(Context context) {

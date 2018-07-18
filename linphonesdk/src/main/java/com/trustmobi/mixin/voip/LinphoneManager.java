@@ -236,6 +236,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.setFriendsDatabasePath(mFriendsDatabaseFile);
         mLc.setUserCertificatesPath(mUserCertificatePath);
         mLc.setNetworkReachable(true);
+        mLc.setVideoPolicy(false,true);
         enableDeviceRingtone(true);
 
         int availableCores = Runtime.getRuntime().availableProcessors();
