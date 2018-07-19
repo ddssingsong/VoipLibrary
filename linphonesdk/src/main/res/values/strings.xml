@@ -53,6 +53,8 @@
     <string name="voice_chat_tips_ok">确定</string>
     <string name="voice_chat_tips_cancel">取消</string>
     <string name="error_low_bandwidth">对方带宽过低，无法开启视频</string>
+    <string name="voip_switch_voice">切到语音</string>
+    <string name="voip_switch_camera">切换摄像头</string>
 
 
 </resources>

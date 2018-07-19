@@ -11,7 +11,7 @@ import com.trustmobi.mixin.voip.callback.VoipCallBack;
 
 import org.linphone.core.LinphoneCall;
 
-import static com.trustmobi.mixin.voip.VoipService.NOTIFY_OUTGOING;
+import static com.trustmobi.mixin.voip.VoipActivity.VOIP_OUTGOING;
 
 /**
  * Created by dds on 2018/5/3.
@@ -75,7 +75,7 @@ public class VoipHelper {
                 randomKey = randomData;
                 isInCall = true;
                 isVideoEnale = isVideoEnable;
-                VoipActivity.openActivity(context, NOTIFY_OUTGOING,isVideoEnable);
+                VoipActivity.openActivity(context, VOIP_OUTGOING,isVideoEnable);
             } else {
                 Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
             }

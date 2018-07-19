@@ -1,7 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/voip_rl_audio"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#242424">
+    android:background="#242424"
+    android:visibility="visible">
+    <!--聊天背景，使用头像-->
+    <ImageView
+        android:id="@+id/iv_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.2"
+        android:src="@drawable/voip_avatar_default" />
 
-</ScrollView>
+    <!--头像-->
+    <ImageView
+        android:id="@+id/voip_voice_chat_avatar"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="130dp"
+        android:src="@drawable/voip_avatar_default" />
+
+    <!--好友昵称-->
+    <TextView
+        android:id="@+id/voice_chat_friend_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/voip_voice_chat_avatar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="好友名称"
+        android:textColor="@android:color/white"
+        android:textSize="28sp" />
+
+    <!--聊天时间  和呼出呼入状态-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/voice_chat_friend_name"
+        android:visibility="visible">
+
+        <!--通话状态提示 邀请您进行语音聊天 正在等待对方接受邀请-->
+        <TextView
+            android:id="@+id/voip_voice_chat_state_tips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:text="@string/voice_chat_calling"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:visibility="visible" />
+
+        <Chronometer
+            android:id="@+id/voip_voice_chat_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/voip_voice_chat_state_tips"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+    </RelativeLayout>
+
+    <!--切换到悬浮窗-->
+    <Button
+        android:id="@+id/narrow_button"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/voip_reduced" />
+
+</RelativeLayout>
+
+

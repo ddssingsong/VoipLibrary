@@ -53,6 +53,9 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.trustmobi.mixin.voip.LinphoneManager.NOT_ANSWER_TIME;
 import static com.trustmobi.mixin.voip.LinphoneManager.getLc;
 import static com.trustmobi.mixin.voip.VoipActivity.CHAT_TYPE;
+import static com.trustmobi.mixin.voip.VoipActivity.VOIP_CALL;
+import static com.trustmobi.mixin.voip.VoipActivity.VOIP_INCOMING;
+import static com.trustmobi.mixin.voip.VoipActivity.VOIP_OUTGOING;
 
 /**
  * Created by dds on 2018/5/3.
@@ -172,7 +175,7 @@ public class VoipService extends Service {
                         if (!LinphoneManager.getInstance().getCallGsmON()) {
                             if (getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
                                 boolean isVideo = call.getRemoteParams() != null && call.getRemoteParams().getVideoEnabled() && getLc().getVideoAutoAcceptPolicy();
-                                VoipActivity.openActivity(VoipService.this, NOTIFY_INCOMING ,isVideo);
+                                VoipActivity.openActivity(VoipService.this, VOIP_INCOMING, isVideo);
 
 
                                 sendNotification(NOTIFY_INCOMING, getString(R.string.voice_chat_notifi_content));
@@ -193,7 +196,7 @@ public class VoipService extends Service {
                     stopTimer();
                     //如果是播出电话，并且在后台状态，就打开界面
                     if (getLc().getCurrentCall().getDirection() == CallDirection.Outgoing) {
-                        VoipActivity.openActivity(VoipService.this, NOTIFY_CALL);
+                        VoipActivity.openActivity(VoipService.this, VOIP_CALL);
                         removeNarrow();
                     }
                 }
@@ -459,20 +462,20 @@ public class VoipService extends Service {
                     call.getState() == LinphoneCall.State.Paused ||
                     call.getState() == LinphoneCall.State.Pausing
                     ) {
-                VoipActivity.openActivity(VoipService.this, NOTIFY_CALL);
+                VoipActivity.openActivity(VoipService.this, VOIP_CALL);
             } else if (call.getState() == LinphoneCall.State.IncomingReceived ||
                     call.getState() == LinphoneCall.State.CallIncomingEarlyMedia) {
 
                 if (call.getDirection() == CallDirection.Outgoing) {
-                    VoipActivity.openActivity(VoipService.this, NOTIFY_OUTGOING);
+                    VoipActivity.openActivity(VoipService.this, VOIP_OUTGOING);
                 } else if (call.getDirection() == CallDirection.Incoming) {
-                    VoipActivity.openActivity(VoipService.this, NOTIFY_INCOMING);
+                    VoipActivity.openActivity(VoipService.this, VOIP_INCOMING);
                 }
             } else if (call.getState() == LinphoneCall.State.OutgoingInit ||
                     call.getState() == LinphoneCall.State.OutgoingProgress ||
                     call.getState() == LinphoneCall.State.OutgoingRinging ||
                     call.getState() == LinphoneCall.State.OutgoingEarlyMedia) {
-                VoipActivity.openActivity(VoipService.this, NOTIFY_OUTGOING);
+                VoipActivity.openActivity(VoipService.this, VOIP_OUTGOING);
             }
         } else {
             removeNarrow();

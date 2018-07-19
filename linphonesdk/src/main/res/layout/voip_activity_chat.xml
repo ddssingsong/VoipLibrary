@@ -5,96 +5,14 @@
     android:layout_height="match_parent"
     android:background="#242424">
 
-    <!--视频通话-->
+    <!--分类界面-->
     <RelativeLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#242424"
-        android:visibility="visible">
+        android:visibility="visible" />
 
-    </RelativeLayout>
-
-    <!--语音通话-->
-    <RelativeLayout
-        android:id="@+id/voip_rl_audio"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="visible">
-        <!--聊天背景，使用头像-->
-        <ImageView
-            android:id="@+id/iv_background"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:alpha="0.2"
-            android:src="@drawable/voip_avatar_default" />
-
-        <!--头像-->
-        <ImageView
-            android:id="@+id/voip_voice_chat_avatar"
-            android:layout_width="110dp"
-            android:layout_height="110dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="130dp"
-            android:src="@drawable/voip_avatar_default" />
-
-        <!--好友昵称-->
-        <TextView
-            android:id="@+id/voice_chat_friend_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/voip_voice_chat_avatar"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
-            android:text="好友名称"
-            android:textColor="@android:color/white"
-            android:textSize="28sp" />
-
-        <!--聊天时间  和呼出呼入状态-->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/voice_chat_friend_name"
-            android:visibility="visible">
-
-            <!--通话状态提示 邀请您进行语音聊天 正在等待对方接受邀请-->
-            <TextView
-                android:id="@+id/voip_voice_chat_state_tips"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="20dp"
-                android:text="@string/voice_chat_calling"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
-                android:visibility="visible" />
-
-            <Chronometer
-                android:id="@+id/voip_voice_chat_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/voip_voice_chat_state_tips"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="50dp"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
-                android:visibility="gone" />
-
-        </RelativeLayout>
-
-    </RelativeLayout>
-
-    <!--切换到悬浮窗-->
-    <Button
-        android:id="@+id/narrow_button"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/voip_reduced" />
-
-    <!--取消，静音，免提 -->
+    <!--静音，取消，免提 -->
     <LinearLayout
         android:id="@+id/voip_voice_chatting"
         android:layout_width="match_parent"
@@ -134,6 +52,46 @@
 
 
     </LinearLayout>
+
+    <!--切到语音 挂断 转换摄像头-->
+    <LinearLayout
+        android:id="@+id/voip_video_chatting"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp"
+        android:gravity="bottom"
+        android:visibility="visible">
+
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_switch_voice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            combtn:voip_src="@drawable/voip_switch_voice"
+            combtn:voip_text="@string/voip_switch_voice" />
+
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_cancel_video"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            combtn:voip_src="@drawable/voip_btn_voice_cancel"
+            combtn:voip_text="@string/voice_chat_refuse_call" />
+
+
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_switch_camera"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            combtn:voip_src="@drawable/voip_switch_camera"
+            combtn:voip_text="@string/voip_switch_camera" />
+
+    </LinearLayout>
+
     <!--接听，挂断-->
     <LinearLayout
         android:id="@+id/voip_chat_incoming"
@@ -163,6 +121,37 @@
             combtn:voip_text="@string/voice_chat_answer" />
 
     </LinearLayout>
+
+    <!--拨出取消 上方切换到语音-->
+    <RelativeLayout
+        android:id="@+id/voip_chat_outgoing"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp"
+        android:visibility="visible">
+
+
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            combtn:voip_src="@drawable/voip_btn_voice_cancel"
+            combtn:voip_text="@string/voice_chat_refuse_call" />
+
+
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_switch_audio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/voip_cancel"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            combtn:voip_src="@drawable/voip_switch_voice"
+            combtn:voip_text="@string/voip_switch_voice" />
+
+    </RelativeLayout>
 </FrameLayout>
 
 

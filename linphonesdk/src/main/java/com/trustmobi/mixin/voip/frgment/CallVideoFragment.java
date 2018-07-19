@@ -192,8 +192,6 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
             LinphoneManager.getLc().setVideoDevice(videoDeviceId);
             CallManager.getInstance().updateCall();
 
-            // previous call will cause graph reconstruction -> regive preview
-            // window
             if (mCaptureView != null) {
                 LinphoneManager.getLc().setPreviewWindow(mCaptureView);
             }

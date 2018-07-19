@@ -687,8 +687,7 @@ public class LinphoneManager implements LinphoneCoreListener {
             // If the correspondent proposes video while audio call
             boolean remoteVideo = call.getRemoteParams().getVideoEnabled();
             boolean localVideo = call.getCurrentParamsCopy().getVideoEnabled();
-            boolean autoAcceptCameraPolicy = false;
-            if (remoteVideo && !localVideo && !autoAcceptCameraPolicy && !LinphoneManager.getLc().isInConference()) {
+            if (remoteVideo && !localVideo && !LinphoneManager.getLc().isInConference()) {
                 try {
                     LinphoneManager.getLc().deferCallUpdate(call);
                 } catch (LinphoneCoreException e) {
