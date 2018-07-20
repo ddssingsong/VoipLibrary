@@ -15,6 +15,7 @@ import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -346,6 +347,11 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                             voip_voice_chatting.setVisibility(View.VISIBLE);
                             replaceFragmentVideoByAudio();
                         }
+
+                    }
+                    if(state == LinphoneCall.State.CallEarlyUpdatedByRemote){
+
+                        Log.e("dds_voip_helper","收到切换到语音的内容");
 
                     }
                     if (state == LinphoneCall.State.Error) {

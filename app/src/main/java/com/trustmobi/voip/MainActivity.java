@@ -55,9 +55,9 @@ public class MainActivity extends AppCompatActivity {
         });
         NarrowTips();
 
-        edit_username.setText("liuhm");
+        edit_username.setText("liuhongmei");
         edit_pwd.setText("123456");
-        edit_to.setText("liuhongmei");
+        edit_to.setText("liuhm");
 
     }
 
