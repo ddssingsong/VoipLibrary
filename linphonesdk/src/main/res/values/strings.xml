@@ -27,7 +27,7 @@
     <string name="voice_chat_friend_refused_toast">对方拒绝了您的请求.</string>
 
     <!--错误提示-->
-    <string name="voice_cha_not_logged_in">%s未登录</string>
+    <string name="voice_cha_not_logged_in">对方手机不在身边请稍后重试！</string>
     <string name="voice_chat_busy">对方忙线中</string>
     <string name="voice_chat_not_found">对方未登录</string>
     <string name="voice_chat_busy_toast">对方忙,请稍后再试!</string>

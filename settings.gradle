@@ -1,1 +1,1 @@
-include ':app', ':voipaar', ':linphonesdk'
+include ':app', ':linphonesdk'

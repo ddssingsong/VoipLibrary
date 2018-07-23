@@ -19,7 +19,7 @@
         android:layout_height="match_parent"
         android:layout_marginBottom="10dp"
         android:gravity="bottom"
-        android:visibility="visible">
+        android:visibility="invisible">
 
 
         <com.trustmobi.mixin.voip.ComButton
@@ -68,6 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
+            android:visibility="invisible"
             combtn:voip_src="@drawable/voip_switch_voice"
             combtn:voip_text="@string/voip_switch_voice" />
 
@@ -100,7 +101,7 @@
         android:layout_marginBottom="10dp"
         android:gravity="bottom"
         android:orientation="horizontal"
-        android:visibility="visible">
+        android:visibility="invisible">
 
         <com.trustmobi.mixin.voip.ComButton
             android:id="@+id/voip_hang_up"
@@ -128,7 +129,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="10dp"
-        android:visibility="visible">
+        android:visibility="invisible">
 
 
         <com.trustmobi.mixin.voip.ComButton
@@ -148,6 +149,7 @@
             android:layout_above="@+id/voip_cancel"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"
+            android:visibility="gone"
             combtn:voip_src="@drawable/voip_switch_voice"
             combtn:voip_text="@string/voip_switch_voice" />
 

@@ -31,8 +31,8 @@ public class VoipUtil {
     }
 
     // 拨打电话
-    public static void outgoing(Context context, String callName, boolean isVideoEnable,String randomKey) {
-        VoipHelper.getInstance().call(context, callName,isVideoEnable, randomKey);
+    public static void outgoing(Context context, String callName, boolean isVideoEnable) {
+        VoipHelper.getInstance().call(context, callName, isVideoEnable);
     }
 
     //关闭Voip服务

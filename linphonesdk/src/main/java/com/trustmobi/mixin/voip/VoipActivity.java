@@ -15,7 +15,6 @@ import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -52,8 +51,6 @@ import java.util.List;
 
 public class VoipActivity extends Activity implements ComButton.onComClick, View.OnClickListener {
 
-    // 加载各个fragment
-    private RelativeLayout fragmentContainer;
     // 来电话
     private LinearLayout voip_chat_incoming;
     private ComButton voip_accept;
@@ -121,7 +118,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
             switch (msg.what) {
                 case CALL:
                     VoipHelper.isInCall = false;
-                    LinphoneManager.getInstance().newOutgoingCall(VoipHelper.friendName, VoipHelper.isVideoEnale, VoipHelper.randomKey);
+                    LinphoneManager.getInstance().newOutgoingCall(VoipHelper.friendName, VoipHelper.isVideoEnale);
                     break;
             }
         }
@@ -211,7 +208,6 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         voip_chat_switch_voice = findViewById(R.id.voip_chat_switch_voice);
         voip_chat_cancel_video = findViewById(R.id.voip_chat_cancel_video);
         voip_chat_switch_camera = findViewById(R.id.voip_chat_switch_camera);
-        fragmentContainer = (RelativeLayout) findViewById(R.id.fragmentContainer);
         voip_chat_outgoing = findViewById(R.id.voip_chat_outgoing);
         voip_cancel = findViewById(R.id.voip_cancel);
         voip_chat_switch_audio = findViewById(R.id.voip_chat_switch_audio);
@@ -349,10 +345,19 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                         }
 
                     }
-                    if(state == LinphoneCall.State.CallEarlyUpdatedByRemote){
+                    if (state == LinphoneCall.State.CallEarlyUpdatedByRemote) {
+                        // 切换到语音接收界面
+                        replaceFragmentVideoByAudio();
 
-                        Log.e("dds_voip_helper","收到切换到语音的内容");
+                    }
+                    if (state == LinphoneCall.State.CallEarlyUpdating) {
+                        replaceFragmentVideoByAudio();
+                    }
 
+                    if (state == LinphoneCall.State.CallUpdating) {
+                        voip_video_chatting.setVisibility(View.INVISIBLE);
+                        voip_voice_chatting.setVisibility(View.VISIBLE);
+                        replaceFragmentVideoByAudio();
                     }
                     if (state == LinphoneCall.State.Error) {
                         terminateErrorCall(call, message);
@@ -403,6 +408,14 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                             voip_voice_chatting.setVisibility(View.VISIBLE);
                             replaceFragmentVideoByAudio();
                         }
+                    } else if (state == LinphoneCall.State.CallEarlyUpdating) {
+                        voip_chat_outgoing.setVisibility(View.INVISIBLE);
+                        voip_voice_chatting.setVisibility(View.VISIBLE);
+                        replaceFragmentVideoByAudio();
+                    } else if (state == LinphoneCall.State.CallUpdating) {
+                        voip_video_chatting.setVisibility(View.INVISIBLE);
+                        voip_voice_chatting.setVisibility(View.VISIBLE);
+                        replaceFragmentVideoByAudio();
                     }
                     if (LinphoneManager.getLc().getCallsNb() == 0) {
                         finish();

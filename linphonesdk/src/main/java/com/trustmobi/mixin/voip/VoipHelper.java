@@ -26,7 +26,6 @@ public class VoipHelper {
     //通话界面显示的内容
     private ChatInfo chatInfo;
     public static String friendName;
-    public static String randomKey;
     public static boolean isInCall;
     public static boolean isVideoEnale;
 
@@ -56,7 +55,6 @@ public class VoipHelper {
         context.startService(intent);
     }
 
-
     // 登录帐号
     public void register(String userId, String password, String serverUrl) {
         if (VoipService.isReady()) {
@@ -66,16 +64,15 @@ public class VoipHelper {
     }
 
     // 拨打电话
-    public void call(Context context, String callName, boolean isVideoEnable, String randomData) {
+    public void call(Context context, String callName, boolean isVideoEnable) {
         if (VoipService.isReady()) {
             // 开始拨打电话
             LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
             if (null == call) {
                 friendName = callName;
-                randomKey = randomData;
                 isInCall = true;
                 isVideoEnale = isVideoEnable;
-                VoipActivity.openActivity(context, VOIP_OUTGOING,isVideoEnable);
+                VoipActivity.openActivity(context, VOIP_OUTGOING, isVideoEnable);
             } else {
                 Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
             }
@@ -113,7 +110,6 @@ public class VoipHelper {
         }
         return false;
     }
-
 
     //设置开启悬浮窗的回调
     private NarrowCallback narrowCallback;

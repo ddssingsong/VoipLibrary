@@ -275,11 +275,11 @@ public class LinphoneManager implements LinphoneCoreListener {
     }
 
     //拨打电话
-    public synchronized void newOutgoingCall(String to, boolean videoEnable, String masterkey) {
-        newOutgoingCall(to, to, videoEnable, masterkey);
+    public synchronized void newOutgoingCall(String to, boolean videoEnable) {
+        newOutgoingCall(to, to, videoEnable);
     }
 
-    public void newOutgoingCall(String to, String displayName, boolean videoEnable, String masterKey) {
+    public void newOutgoingCall(String to, String displayName, boolean videoEnable) {
         if (to == null) return;
         LinLog.e(VoipHelper.TAG, "call to number:" + to);
         LinphoneProxyConfig lpc = getLc().getDefaultProxyConfig();
@@ -299,9 +299,9 @@ public class LinphoneManager implements LinphoneCoreListener {
             try {
                 if (Version.isVideoCapable()) {
                     boolean prefVideoEnable = getLc().isVideoSupported() && getLc().isVideoEnabled();
-                    CallManager.getInstance().inviteAddress(lAddress, prefVideoEnable && videoEnable, isLowBandwidthConnection, masterKey);
+                    CallManager.getInstance().inviteAddress(lAddress, prefVideoEnable && videoEnable, isLowBandwidthConnection, "");
                 } else {
-                    CallManager.getInstance().inviteAddress(lAddress, false, isLowBandwidthConnection, masterKey);
+                    CallManager.getInstance().inviteAddress(lAddress, false, isLowBandwidthConnection, "");
                 }
             } catch (LinphoneCoreException e) {
                 e.printStackTrace();

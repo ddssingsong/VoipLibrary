@@ -110,12 +110,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void call(View view) {
         String callName = edit_to.getText().toString().trim();
-        VoipUtil.outgoing(this, callName, false, "1234567890123456789012345678901234567890");
+        VoipUtil.outgoing(this, callName, false);
     }
 
     public void video(View view) {
         String callName = edit_to.getText().toString().trim();
-        VoipUtil.outgoing(this, callName, true, "1234567890123456789012345678901234567890");
+        VoipUtil.outgoing(this, callName, true);
     }
 
 
