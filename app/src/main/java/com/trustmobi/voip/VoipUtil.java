@@ -57,7 +57,7 @@ public class VoipUtil {
         VoipHelper.getInstance().createNarrow();
     }
 
-    public static boolean isIncall() {
-        return VoipHelper.getInstance().isInCall();
+    public static boolean isIncall(Context context) {
+        return VoipHelper.getInstance().isInCall(context);
     }
 }

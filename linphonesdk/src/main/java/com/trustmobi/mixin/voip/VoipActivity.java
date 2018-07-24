@@ -369,6 +369,10 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                             if (audioCallFragment != null) {
                                 audioCallFragment.updateChatStateTips(getString(R.string.voice_chat_invite_call));
                             }
+                        } else {
+                            if (videoPreViewFragment != null) {
+                                videoPreViewFragment.updateChatStateTips(getString(R.string.voice_chat_invite_call));
+                            }
                         }
 
                     } else if (call == mCall && LinphoneCall.State.Connected == state) {
@@ -377,6 +381,10 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                             voip_chat_mute.setEnable(true);
                             if (audioCallFragment != null) {
                                 audioCallFragment.updateChatStateTips(getString(R.string.voice_chat_connect));
+                            }
+                        } else {
+                            if (videoPreViewFragment != null) {
+                                videoPreViewFragment.updateChatStateTips(getString(R.string.voice_chat_connect));
                             }
                         }
                         return;
