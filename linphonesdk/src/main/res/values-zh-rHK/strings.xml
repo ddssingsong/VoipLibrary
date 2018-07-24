@@ -1,0 +1,63 @@
+<resources>
+
+
+    <string name="voice_chat">語音聊天</string>
+
+    <string name="voice_chat_mute">靜音</string>
+    <string name="voice_chat_hands_free">免提</string>
+    <string name="voice_chat_refuse">拒接</string>
+    <string name="voice_chat_answer">接聽</string>
+    <string name="voice_chat_refuse_call">挂斷</string>
+    <string name="voip_switch_voice">切到語音</string>
+    <string name="voip_switch_camera">切換攝像頭</string>
+
+
+    <!--拨出电话-->
+    <string name="voice_call_fail">呼叫失敗！</string>
+    <string name="voice_chat_cancel">已取消</string>
+    <string name="voice_chat_friend_refused">對方已拒絕</string>
+    <string name="voice_chat_no_answer">對方無應答</string>
+    <!--呼入电话-->
+    <string name="voice_chat_hang_up">已拒绝</string>
+    <string name="voice_chat_friend_cancel">對方已取消</string>
+    <!--呼入和拨出-->
+    <string name="voice_chat_time">聊天時長 </string>
+    <string name="voice_chat_time_out">未接</string>
+
+    <!--弹出提示-->
+    <string name="voice_chat_succeed_user">已挂斷</string>
+    <string name="voice_chat_succeed">對方已挂斷,聊天結束.</string>
+    <string name="voice_chat_friend_refused_toast">對方拒絕了您的請求.</string>
+    <string name="voice_cha_not_logged_in">對方手機不在身邊請稍後重試！</string>
+    <string name="voice_chat_busy">對方忙綫中</string>
+    <string name="voice_chat_not_found">對方手機不在身邊，請稍後重試！</string>
+    <string name="voice_chat_busy_toast">對方忙,請稍後重試!</string>
+    <string name="voice_chat_setmastkey_err_toast">持有好友公钥不正确,请刷新通讯录列表!</string>
+    <string name="voice_chat_err">連接失敗</string>
+    <string name="voice_chat_no_answer_toast">對方手機可能不在身邊，建議稍後重新嘗試.</string>
+
+
+    <!--拨打界面-->
+    <string name="voice_chat_invite_call">正在等待對方接受邀請</string>
+    <string name="voice_chat_invite">邀请你进行语音聊天&#8230;</string>
+    <string name="voice_chat_connect">連接中&#8230;</string>
+    <string name="voice_chat_calling">呼叫中&#8230;</string>
+    <string name="voice_chat_float_waitting">等待接聽</string>
+    <string name="voice_chat_no_answer_tips">对方手机可能不在身边，即将挂断</string>
+    <string name="voice_chat_notifi_content">通话中&#8230;</string>
+    <string name="error_low_bandwidth">对方带宽过低，无法开启视频</string>
+    <string name="voice_chat_error_calling">正在语音通话，请稍后重试！</string>
+
+
+    <string name="voice_chat_tips">溫馨提示！</string>
+    <string name="voice_chat_tips_content">拨打电话中需要开启悬浮窗权限才可以在界面上显示悬浮窗</string>
+    <string name="voice_chat_tips_ok">確定</string>
+    <string name="voice_chat_tips_cancel">取消</string>
+
+
+    <string name="voice_voip_is_incall">您正在通话中，请取消通话后重试！</string>
+    <string name="voice_chat_getmastkey">正在解密通话密钥</string>
+    <string name="voice_chat_sendmastkey">正在同步通话密钥</string>
+
+
+</resources>
