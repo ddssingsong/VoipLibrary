@@ -97,7 +97,7 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
         if (info != null) {
             Glide.with(this)
                     .load(info.getRemoteAvatar())
-                    .transform(new RoundedCornersTransformation(getActivity(), 10))
+                    .transform(new RoundedCornersTransformation(getActivity(), 4))
                     .placeholder(info.getDefaultAvatar())
                     .error(info.getDefaultAvatar())
                     .into(voip_voice_chat_avatar);
