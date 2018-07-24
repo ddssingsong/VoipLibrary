@@ -3,8 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
     <SurfaceView
         android:id="@+id/videoCaptureSurface"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+
+    <!--头像-->
+    <ImageView
+        android:id="@+id/voip_voice_chat_avatar"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="30dp"
+        android:src="@drawable/voip_avatar_default" />
+
+    <!--好友昵称-->
+    <TextView
+        android:id="@+id/voice_chat_friend_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="35dp"
+        android:layout_toEndOf="@id/voip_voice_chat_avatar"
+        android:layout_toRightOf="@id/voip_voice_chat_avatar"
+        android:text="好友名称"
+        android:textColor="@android:color/white"
+        android:textSize="28sp" />
 </RelativeLayout>

@@ -79,8 +79,9 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
             rootView = inflater.inflate(R.layout.voip_audio, container, false);
             initView(rootView);
             initListener();
+            initVar();
         }
-        initVar();
+
         return rootView;
     }
 

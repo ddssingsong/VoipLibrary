@@ -6,14 +6,23 @@ import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.dds.tbs.linphonesdk.R;
+import com.trustmobi.mixin.voip.RoundedCornersTransformation;
+import com.trustmobi.mixin.voip.VoipHelper;
+import com.trustmobi.mixin.voip.VoipService;
+import com.trustmobi.mixin.voip.bean.ChatInfo;
+import com.trustmobi.mixin.voip.callback.VoipCallBack;
 
 
 /**
@@ -27,7 +36,8 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
     private SurfaceView mCaptureView;
     private SurfaceHolder surfaceHolder;
     private Camera camera;//摄像头
-
+    private ImageView voip_voice_chat_avatar;
+    private TextView voice_chat_friend_name;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,12 +50,36 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
 
         View view = inflater.inflate(R.layout.voip_video_preview, container, false);
         mCaptureView = (SurfaceView) view.findViewById(R.id.videoCaptureSurface);
+        voip_voice_chat_avatar = (ImageView) view.findViewById(R.id.voip_voice_chat_avatar);
+        voice_chat_friend_name = (TextView) view.findViewById(R.id.voice_chat_friend_name);
         surfaceHolder = mCaptureView.getHolder();
         surfaceHolder.setFormat(PixelFormat.TRANSPARENT);
         surfaceHolder.setKeepScreenOn(true);
         surfaceHolder.addCallback(this);
-
+        initVar();
         return view;
+    }
+
+    private ChatInfo info;
+
+    private void initVar() {
+        //显示头像和昵称
+        info = VoipHelper.getInstance().getChatInfo();
+        if (!TextUtils.isEmpty(VoipHelper.friendName)) {
+            VoipCallBack callBack = VoipService.instance.getCallBack();
+            if (callBack != null) {
+                info = callBack.getChatInfo(VoipHelper.friendName);
+            }
+        }
+        if (info != null) {
+            Glide.with(this)
+                    .load(info.getRemoteAvatar())
+                    .transform(new RoundedCornersTransformation(getActivity(), 10))
+                    .placeholder(info.getDefaultAvatar())
+                    .error(info.getDefaultAvatar())
+                    .into(voip_voice_chat_avatar);
+            voice_chat_friend_name.setText(info.getRemoteNickName());
+        }
     }
 
     private void initCamera() {
