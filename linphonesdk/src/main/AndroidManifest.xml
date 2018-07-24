@@ -24,7 +24,6 @@
             android:name="com.trustmobi.mixin.voip.VoipActivity"
             android:configChanges="keyboardHidden|orientation"
             android:launchMode="singleInstance"
-            android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Black.NoTitleBar" />
+            android:screenOrientation="portrait" />
     </application>
 </manifest>

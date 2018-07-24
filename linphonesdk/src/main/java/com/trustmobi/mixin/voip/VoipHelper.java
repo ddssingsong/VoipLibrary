@@ -100,10 +100,11 @@ public class VoipHelper {
     }
 
     //是否在通话中
-    public boolean isInCall() {
+    public boolean isInCall(Context context) {
         if (VoipService.isReady() && LinphoneManager.isInstanciated()) {
             LinphoneCall currentCall = LinphoneManager.getLc().getCurrentCall();
             if (currentCall != null) {
+                Toast.makeText(context,R.string.voice_voip_is_incall,Toast.LENGTH_SHORT).show();
                 return true;
             }
 
