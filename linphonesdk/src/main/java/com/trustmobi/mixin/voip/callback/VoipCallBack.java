@@ -14,13 +14,15 @@ public interface VoipCallBack {
 
 
     //拨出的电话挂断
-    void terminateCall(String friendId, String message);
+    void terminateCall(boolean isVideo,String friendId, String message);
 
     // 接收的电话挂断
-    void terminateIncomingCall(String friendId, String message, boolean isMiss);
+    void terminateIncomingCall(boolean isVideo,String friendId, String message, boolean isMiss);
 
 
     //获取需要在界面上显示的用户信息
     ChatInfo getChatInfo(String userId);
+
+    ChatInfo getGroupInFo(long groupId);
 
  }

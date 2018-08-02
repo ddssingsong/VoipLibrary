@@ -236,8 +236,9 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.setFriendsDatabasePath(mFriendsDatabaseFile);
         mLc.setUserCertificatesPath(mUserCertificatePath);
         mLc.setNetworkReachable(true);
-        mLc.setVideoPolicy(false,true);
+        mLc.setVideoPolicy(true, true);
         enableDeviceRingtone(true);
+
 
         int availableCores = Runtime.getRuntime().availableProcessors();
         mLc.setCpuCount(availableCores);
@@ -249,6 +250,8 @@ public class LinphoneManager implements LinphoneCoreListener {
         //设置如果对方多久未接进行挂断
         mLc.setIncomingTimeout(NOT_ANSWER_TIME);
         //enableJustOneAudioCodec("opus");
+        enableJustOneVideoCodec("h264");
+
 
         resetCameraFromPreferences();
 
@@ -312,6 +315,22 @@ public class LinphoneManager implements LinphoneCoreListener {
 
     private void enableJustOneAudioCodec(String codecName) {
         for (PayloadType pt : LinphoneManager.getLc().getAudioCodecs()) {
+            try {
+                if (pt.getMime().toLowerCase().equals(codecName)) {
+                    LinphoneManager.getLc().enablePayloadType(pt, true);
+                } else {
+                    LinphoneManager.getLc().enablePayloadType(pt, false);
+                }
+            } catch (LinphoneCoreException ex) {
+                ex.printStackTrace();
+            }
+
+        }
+    }
+
+
+    private void enableJustOneVideoCodec(String codecName) {
+        for (PayloadType pt : LinphoneManager.getLc().getVideoCodecs()) {
             try {
                 if (pt.getMime().toLowerCase().equals(codecName)) {
                     LinphoneManager.getLc().enablePayloadType(pt, true);
@@ -420,12 +439,13 @@ public class LinphoneManager implements LinphoneCoreListener {
     }
 
 
-   // @return false if already in video call.
+    // @return false if already in video call.
     public boolean addVideo() {
         LinphoneCall call = mLc.getCurrentCall();
         enableCamera(call, true);
         return reinviteWithVideo();
     }
+
     public void enableCamera(LinphoneCall call, boolean enable) {
         if (call != null) {
             call.enableCamera(enable);

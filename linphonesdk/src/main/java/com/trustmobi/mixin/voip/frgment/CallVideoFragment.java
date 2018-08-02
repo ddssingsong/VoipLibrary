@@ -40,6 +40,7 @@ import com.trustmobi.mixin.voip.CallManager;
 import com.trustmobi.mixin.voip.LinphoneManager;
 import com.trustmobi.mixin.voip.LinphoneUtils;
 import com.trustmobi.mixin.voip.VoipActivity;
+import com.trustmobi.mixin.voip.VoipService;
 import com.trustmobi.mixin.voip.compatibility.Compatibility;
 import com.trustmobi.mixin.voip.compatibility.CompatibilityScaleGestureDetector;
 import com.trustmobi.mixin.voip.compatibility.CompatibilityScaleGestureListener;
@@ -204,9 +205,8 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
     public void onResume() {
         super.onResume();
 
-//		if (LinphonePreferences.instance().isOverlayEnabled()) {
-//			LinphoneService.instance().destroyOverlay();
-//		}
+        VoipService.instance().destroyOverlay();
+
         if (androidVideoWindowImpl != null) {
             synchronized (androidVideoWindowImpl) {
                 LinphoneManager.getLc().setVideoWindow(androidVideoWindowImpl);
@@ -224,15 +224,13 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
         if (androidVideoWindowImpl != null) {
             synchronized (androidVideoWindowImpl) {
                 /*
-				 * this call will destroy native opengl renderer which is used by
+                 * this call will destroy native opengl renderer which is used by
 				 * androidVideoWindowImpl
 				 */
                 LinphoneManager.getLc().setVideoWindow(null);
             }
         }
-//		if (LinphonePreferences.instance().isOverlayEnabled()) {
-//			LinphoneService.instance().createOverlay();
-//		}
+        VoipService.instance().createOverlay();
 
         super.onPause();
     }

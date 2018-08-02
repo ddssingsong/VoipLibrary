@@ -25,13 +25,12 @@ public class VoipCallBackDefault implements VoipCallBack {
     }
 
     @Override
-    public void terminateCall(String friendId, String message) {
+    public void terminateCall(boolean isVideo, String friendId, String message) {
         LinLog.e(VoipHelper.TAG, "terminateCall friendId:" + friendId + ",message:" + message);
-
     }
 
     @Override
-    public void terminateIncomingCall(String friendId, String message, boolean isMiss) {
+    public void terminateIncomingCall(boolean isVideo, String friendId, String message, boolean isMiss) {
         LinLog.e(VoipHelper.TAG, "terminateIncomingCall friendId:" + friendId + ",message:" + message + ",isMiss:" + isMiss);
     }
 
@@ -41,4 +40,9 @@ public class VoipCallBackDefault implements VoipCallBack {
         return null;
     }
 
-  }
+    @Override
+    public ChatInfo getGroupInFo(long groupId) {
+        return null;
+    }
+
+}

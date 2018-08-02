@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:combtn="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#242424">
@@ -62,15 +63,26 @@
         android:gravity="bottom"
         android:visibility="visible">
 
+        <!--切换到语音暂时不能用-->
         <com.trustmobi.mixin.voip.ComButton
             android:id="@+id/voip_chat_switch_voice"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:visibility="invisible"
+            android:visibility="gone"
             combtn:voip_src="@drawable/voip_switch_voice"
             combtn:voip_text="@string/voip_switch_voice" />
+
+        <!--使用静音代替-->
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_mute2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            combtn:voip_src="@drawable/voip_btn_voice_mute"
+            combtn:voip_text="@string/voice_chat_mute" />
 
         <com.trustmobi.mixin.voip.ComButton
             android:id="@+id/voip_chat_cancel_video"

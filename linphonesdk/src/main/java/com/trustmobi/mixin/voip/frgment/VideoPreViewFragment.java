@@ -88,12 +88,22 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
     private void initVar() {
         //显示头像和昵称
         info = VoipHelper.getInstance().getChatInfo();
-        if (!TextUtils.isEmpty(VoipHelper.friendName)) {
+        if (VoipHelper.mGroupId != 0) {
             VoipCallBack callBack = VoipService.instance.getCallBack();
             if (callBack != null) {
-                info = callBack.getChatInfo(VoipHelper.friendName);
+                info = callBack.getGroupInFo(VoipHelper.mGroupId);
             }
+        } else {
+            if (!TextUtils.isEmpty(VoipHelper.friendName)) {
+                VoipCallBack callBack = VoipService.instance.getCallBack();
+                if (callBack != null) {
+                    info = callBack.getChatInfo(VoipHelper.friendName);
+                }
+            }
+
         }
+
+
         if (info != null) {
             Glide.with(this)
                     .load(info.getRemoteAvatar())

@@ -55,9 +55,9 @@ public class MainActivity extends AppCompatActivity {
         });
         NarrowTips();
 
-        edit_username.setText("liuhongmei");
+        edit_username.setText("liuhm");
         edit_pwd.setText("123456");
-        edit_to.setText("liuhm");
+        edit_to.setText("liuhongmei");
 
     }
 
@@ -117,8 +117,6 @@ public class MainActivity extends AppCompatActivity {
         String callName = edit_to.getText().toString().trim();
         VoipUtil.outgoing(this, callName, true);
     }
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

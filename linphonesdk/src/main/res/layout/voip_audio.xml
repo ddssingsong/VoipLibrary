@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:alpha="0.2"
+        android:scaleType="centerCrop"
         android:src="@drawable/voip_avatar_default" />
 
     <!--头像-->
@@ -69,8 +70,8 @@
     <!--切换到悬浮窗-->
     <Button
         android:id="@+id/narrow_button"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"

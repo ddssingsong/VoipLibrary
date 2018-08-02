@@ -14,7 +14,7 @@ import com.trustmobi.mixin.voip.callback.VoipCallBack;
 
 public class VoipUtil {
 
-    public static String serverUrl = "120.76.153.229:10982";
+    public static String serverUrl = "sip.linphone.org";
 
     // 开启Voip服务
     public static void startService(Context context) {
@@ -32,7 +32,7 @@ public class VoipUtil {
 
     // 拨打电话
     public static void outgoing(Context context, String callName, boolean isVideoEnable) {
-        VoipHelper.getInstance().call(context, callName, isVideoEnable);
+        VoipHelper.getInstance().call(context, callName, isVideoEnable, 0);
     }
 
     //关闭Voip服务
@@ -47,6 +47,7 @@ public class VoipUtil {
         VoipHelper.getInstance().setNarrowCallback(new NarrowCallbackDefault(activity));
 
     }
+
     //sssss
     public static void setBussinessCallback(VoipCallBack callBack) {
         VoipHelper.getInstance().setVoipCallBack(callBack);

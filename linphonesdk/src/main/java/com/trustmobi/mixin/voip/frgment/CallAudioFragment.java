@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 import android.app.Fragment;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
@@ -30,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -41,6 +43,7 @@ import com.trustmobi.mixin.voip.VoipHelper;
 import com.trustmobi.mixin.voip.VoipService;
 import com.trustmobi.mixin.voip.bean.ChatInfo;
 import com.trustmobi.mixin.voip.callback.VoipCallBack;
+import com.trustmobi.mixin.voip.utils.StatusBarCompat;
 
 import org.linphone.core.LinphoneCall;
 
@@ -77,6 +80,7 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
                              Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.voip_audio, container, false);
+
             initView(rootView);
             initListener();
             initVar();
@@ -95,12 +99,25 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
 
         if (chatType == VOIP_INCOMING) {
             updateChatStateTips(getString(R.string.voice_chat_invite));
+            narrow_button.setVisibility(View.INVISIBLE);
         } else if (chatType == VOIP_OUTGOING) {
             updateChatStateTips(getString(R.string.voice_chat_calling));
+            narrow_button.setVisibility(View.INVISIBLE);
         } else {
+            narrow_button.setVisibility(View.VISIBLE);
             voip_voice_chat_state_tips.setVisibility(View.INVISIBLE);
             LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
-            registerCallDurationTimer(voip_voice_chat_time,call);
+            if(call!=null){
+                registerCallDurationTimer(voip_voice_chat_time, call);
+            }
+
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            int statusBarHeight = StatusBarCompat.getStatusBarHeight(getActivity());
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(narrow_button.getLayoutParams());
+            lp.setMargins(32, statusBarHeight + 32, 0, 0);
+            narrow_button.setLayoutParams(lp);
         }
     }
 
@@ -114,16 +131,24 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
     private void initVar() {
         //显示头像和昵称
         info = VoipHelper.getInstance().getChatInfo();
-        if (!TextUtils.isEmpty(VoipHelper.friendName)) {
+        if (VoipHelper.mGroupId != 0) {
             VoipCallBack callBack = VoipService.instance.getCallBack();
             if (callBack != null) {
-                info = callBack.getChatInfo(VoipHelper.friendName);
+                info = callBack.getGroupInFo(VoipHelper.mGroupId);
             }
+        } else {
+            if (!TextUtils.isEmpty(VoipHelper.friendName)) {
+                VoipCallBack callBack = VoipService.instance.getCallBack();
+                if (callBack != null) {
+                    info = callBack.getChatInfo(VoipHelper.friendName);
+                }
+            }
+
         }
         if (info != null) {
             Glide.with(this)
                     .load(info.getRemoteAvatar())
-                    .transform(new RoundedCornersTransformation(getActivity(), 10))
+                    .transform(new RoundedCornersTransformation(getActivity(), 4))
                     .placeholder(info.getDefaultAvatar())
                     .error(info.getDefaultAvatar())
                     .into(voip_voice_chat_avatar);
@@ -179,6 +204,13 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
 
     }
 
+
+    public void setNarrowVisible(boolean isVisible) {
+        if (narrow_button != null) {
+            narrow_button.setVisibility(isVisible ? View.VISIBLE : View.INVISIBLE);
+        }
+
+    }
 
     //更新提示语
     public void updateChatStateTips(String tips) {

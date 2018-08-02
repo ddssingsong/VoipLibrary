@@ -29,7 +29,9 @@ import org.linphone.core.LinphoneCore.StreamType;
  *
  */
 public interface LinphoneCallParams {
+
 	void setVideoEnabled(boolean b);
+
 	boolean getVideoEnabled();
 	
 	/**

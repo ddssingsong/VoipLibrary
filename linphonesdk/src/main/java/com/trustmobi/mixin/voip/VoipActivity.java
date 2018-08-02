@@ -1,6 +1,6 @@
 package com.trustmobi.mixin.voip;
 
-import android.app.Activity;
+import android.Manifest;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -21,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -30,6 +32,7 @@ import com.dds.tbs.linphonesdk.R;
 import com.trustmobi.mixin.voip.frgment.CallAudioFragment;
 import com.trustmobi.mixin.voip.frgment.CallVideoFragment;
 import com.trustmobi.mixin.voip.frgment.VideoPreViewFragment;
+import com.trustmobi.mixin.voip.utils.StatusBarCompat;
 
 import org.linphone.core.CallDirection;
 import org.linphone.core.LinphoneAddress;
@@ -49,8 +52,9 @@ import java.util.List;
  * android_shuai@163.com
  */
 
-public class VoipActivity extends Activity implements ComButton.onComClick, View.OnClickListener {
+public class VoipActivity extends AppCompatActivity implements ComButton.onComClick, View.OnClickListener {
 
+    private FrameLayout rootView;
     // 来电话
     private LinearLayout voip_chat_incoming;
     private ComButton voip_accept;
@@ -71,6 +75,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     private ComButton voip_chat_switch_voice;
     private ComButton voip_chat_cancel_video;
     private ComButton voip_chat_switch_camera;
+    private ComButton voip_chat_mute2;
 
 
     private LinphoneCall mCall;
@@ -127,6 +132,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StatusBarCompat.compat(this);
         //设置锁屏状态下也能亮屏
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
@@ -154,7 +160,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     }
 
     @Override
-    protected void onResume() {
+    protected synchronized void onResume() {
         super.onResume();
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -176,7 +182,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     }
 
     @Override
-    protected void onPause() {
+    protected synchronized void onPause() {
         LinphoneCore lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
         if (lc != null) {
             lc.removeListener(mListener);
@@ -185,7 +191,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     }
 
     @Override
-    protected void onDestroy() {
+    protected synchronized void onDestroy() {
         if (homeWatcherReceiver != null) {
             unregisterReceiver(homeWatcherReceiver);
         }
@@ -197,6 +203,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
     }
 
     private void initView() {
+        rootView = findViewById(R.id.rootView);
         voip_chat_incoming = (LinearLayout) findViewById(R.id.voip_chat_incoming);
         voip_voice_chatting = (LinearLayout) findViewById(R.id.voip_voice_chatting);
         voip_chat_mute = (ComButton) findViewById(R.id.voip_chat_mute);
@@ -211,6 +218,10 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         voip_chat_outgoing = findViewById(R.id.voip_chat_outgoing);
         voip_cancel = findViewById(R.id.voip_cancel);
         voip_chat_switch_audio = findViewById(R.id.voip_chat_switch_audio);
+
+        voip_chat_mute2 = findViewById(R.id.voip_chat_mute2);
+
+
     }
 
     private void initVar() {
@@ -220,7 +231,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         // 显示拨出界面
         if (chatType == VOIP_OUTGOING) {
             lookupOutgoingCall();
-            showOutGoingView(isVideo || (mCall != null && isVideoEnabled(mCall)));
+            showOutGoingView((isVideo && LinphoneManager.getLc().isVideoEnabled()) || (mCall != null && isVideoEnabled(mCall)));
             if (mCall == null) {
                 voipHandler.sendEmptyMessageDelayed(CALL, 2000);
             }
@@ -232,7 +243,9 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         } else {
             //正在通话中
             lookupCalling();
-            LinphoneManager.getInstance().routeAudioToSpeaker();
+            if (LinphoneManager.getLc() != null) {
+                LinphoneManager.getInstance().routeAudioToSpeaker();
+            }
             isSpeakerEnabled = true;
             showCallView(mCall != null && isVideoEnabled(mCall));
 
@@ -301,6 +314,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         voip_chat_switch_voice.setComClickListener(this);
         voip_chat_cancel_video.setComClickListener(this);
         voip_chat_switch_camera.setComClickListener(this);
+        voip_chat_mute2.setComClickListener(this);
         //
         voip_cancel.setComClickListener(this);
         voip_chat_switch_audio.setComClickListener(this);
@@ -333,6 +347,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                             if (audioCallFragment != null) {
                                 audioCallFragment.updateChatStateTips("");
                                 audioCallFragment.registerCallDurationTimer(null, call);
+                                audioCallFragment.setNarrowVisible(true);
                             }
                         }
                     }
@@ -365,7 +380,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                 } else {
                     //去电话
                     if (call == mCall && LinphoneCall.State.OutgoingRinging == state) {
-                        if (!isVideoEnabled(call)) {
+                        if (!isVideoEnabled(call) && !isVideo) {
                             if (audioCallFragment != null) {
                                 audioCallFragment.updateChatStateTips(getString(R.string.voice_chat_invite_call));
                             }
@@ -399,6 +414,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
                             if (audioCallFragment != null) {
                                 audioCallFragment.updateChatStateTips("");
                                 audioCallFragment.registerCallDurationTimer(null, call);
+                                audioCallFragment.setNarrowVisible(true);
                             }
                         }
 
@@ -465,7 +481,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
             //挂断电话
             declineIncoming();
 
-        } else if (id == R.id.voip_chat_mute) {
+        } else if (id == R.id.voip_chat_mute || id == R.id.voip_chat_mute2) {
             // 开启静音
             toggleMicro();
 
@@ -601,7 +617,7 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
             lc.muteMic(false);
         }
 
-
+        voip_chat_mute2.setImageResource(isMicMuted ? R.drawable.voip_mute : R.drawable.voip_btn_voice_mute);
         voip_chat_mute.setImageResource(isMicMuted ? R.drawable.voip_mute : R.drawable.voip_btn_voice_mute);
 
     }
@@ -692,8 +708,15 @@ public class VoipActivity extends Activity implements ComButton.onComClick, View
         voip_chat_incoming.setVisibility(View.VISIBLE);
         voip_chat_outgoing.setVisibility(View.INVISIBLE);
         if (isVideo) {
+            // 检查相机权限
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, 1000);
+                }
+            }
             videoPreViewFragment = new VideoPreViewFragment();
             addFragment(videoPreViewFragment, chatType);
+
         } else {
             audioCallFragment = new CallAudioFragment();
             addFragment(audioCallFragment, chatType);

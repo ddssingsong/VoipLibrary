@@ -99,6 +99,8 @@ public class VoipService extends Service {
         isDebug = VoipHelper.getInstance().isDebug();
         LinphoneCoreFactory.instance().setDebugMode(isDebug, "dds_voip");
         LinphoneCoreFactory.instance().setLogCollectionPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/trustmobi_voip");
+        mWindowManager = (WindowManager) getApplicationContext()
+                .getSystemService(WINDOW_SERVICE);
         //开启基本配置
         LinphoneManager.createAndStart(this);
         instance = this;
@@ -176,8 +178,6 @@ public class VoipService extends Service {
                             if (getLc().getCurrentCall().getDirection() == CallDirection.Incoming) {
                                 boolean isVideo = call.getRemoteParams() != null && call.getRemoteParams().getVideoEnabled() && getLc().getVideoAutoAcceptPolicy();
                                 VoipActivity.openActivity(VoipService.this, VOIP_INCOMING, isVideo);
-
-
                                 sendNotification(NOTIFY_INCOMING, getString(R.string.voice_chat_notifi_content));
                             }
                         }
@@ -208,16 +208,22 @@ public class VoipService extends Service {
                     cancelNotification(NOTIFY_OUTGOING);
                     cancelNotification(NOTIFY_INCOMING);
                     cancelNotification(NOTIFY_CALL);
+                    VoipHelper.friendName = "";
+                    VoipHelper.mGroupId = 0;
+                    destroyOverlay();
                 }
 
                 //=================================出错时===================================================
                 if (state == LinphoneCall.State.Error) {
-                    // terminateErrorCall(call, message);
+                    terminateErrorCall(call, message);
                     removeNarrow();
                     stopTimer();
                     cancelNotification(NOTIFY_OUTGOING);
                     cancelNotification(NOTIFY_INCOMING);
                     cancelNotification(NOTIFY_CALL);
+                    VoipHelper.friendName = "";
+                    VoipHelper.mGroupId = 0;
+                    destroyOverlay();
                 }
 
             }
@@ -226,21 +232,34 @@ public class VoipService extends Service {
 
     }
 
+    private void terminateErrorCall(LinphoneCall call, String message) {
+        LinphoneAddress remoteAddress = call.getRemoteAddress();
+        String userId = remoteAddress.getUserName();
+        boolean isVideoEnable = call.getCurrentParams().getVideoEnabled();
+        if (call.getDirection() == CallDirection.Outgoing) {
+            if (callBack != null) {
+                callBack.terminateCall(isVideoEnable, userId, getString(R.string.voice_chat_cancel));
+            }
+        }
+    }
+
     //通话结束，分析挂断方式
     private void terminateCall(LinphoneCall call, String message) {
         LinphoneAddress remoteAddress = call.getRemoteAddress();
         String userId = remoteAddress.getUserName();
         LinphoneCallLog.CallStatus callstate = call.getCallLog().getStatus();
+        boolean isVideoEnable = call.getCurrentParams().getVideoEnabled();
+        boolean isRemoteVideoEnabe = call.getRemoteParams().getVideoEnabled();
         if (call.getDirection() == CallDirection.Outgoing) {
             //对方拒绝了您的请求.
             if (callstate == LinphoneCallLog.CallStatus.Declined) {
                 if (callBack != null) {
                     if (current < (NOT_ANSWER_TIME - 2)) {
                         Toast.makeText(this, getString(R.string.voice_chat_friend_refused_toast), Toast.LENGTH_SHORT).show();
-                        callBack.terminateCall(userId, getString(R.string.voice_chat_friend_refused));
+                        callBack.terminateCall(isVideoEnable, userId, getString(R.string.voice_chat_friend_refused));
                     } else {
                         Toast.makeText(this, getString(R.string.voice_chat_no_answer), Toast.LENGTH_SHORT).show();
-                        callBack.terminateCall(userId, getString(R.string.voice_chat_no_answer));
+                        callBack.terminateCall(isVideoEnable, userId, getString(R.string.voice_chat_no_answer));
                     }
 
                 }
@@ -248,7 +267,7 @@ public class VoipService extends Service {
             //取消了呼出电话
             else if (callstate == LinphoneCallLog.CallStatus.Aborted) {
                 if (callBack != null) {
-                    callBack.terminateCall(userId, getString(R.string.voice_chat_cancel));
+                    callBack.terminateCall(isVideoEnable, userId, getString(R.string.voice_chat_cancel));
                 }
             }
 
@@ -259,38 +278,40 @@ public class VoipService extends Service {
                 if (message.equals("Call ended")) {
                     Toast.makeText(this, getString(R.string.voice_chat_succeed), Toast.LENGTH_SHORT).show();
                     if (callBack != null) {
-                        callBack.terminateCall(userId, getString(R.string.voice_chat_time) + time);
+                        callBack.terminateCall(isVideoEnable, userId, getString(R.string.voice_chat_time) + time);
                     }
                 } else {
                     Toast.makeText(this, getString(R.string.voice_chat_succeed_user), Toast.LENGTH_SHORT).show();
                     if (callBack != null) {
-                        callBack.terminateCall(userId, getString(R.string.voice_chat_time) + time);
+                        callBack.terminateCall(isVideoEnable, userId, getString(R.string.voice_chat_time) + time);
                     }
                 }
 
 
             }
+
+
         } else if (call.getDirection() == CallDirection.Incoming) {
             //对方取消了或者自己长时间未接
             if (callstate == LinphoneCallLog.CallStatus.Missed) {
                 if (callBack != null) {
                     if (message.equals("Call terminated")) {
-                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_time_out), true);
+                        callBack.terminateIncomingCall(isRemoteVideoEnabe, userId, getString(R.string.voice_chat_time_out), true);
                     } else if (message.equals("Call ended")) {
-                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_friend_cancel), true);
+                        callBack.terminateIncomingCall(isRemoteVideoEnabe, userId, getString(R.string.voice_chat_friend_cancel), true);
                     }
 
                 }
             } else if (callstate == LinphoneCallLog.CallStatus.Aborted) {
                 if (callBack != null) {
-                    callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_friend_cancel), true);
+                    callBack.terminateIncomingCall(isRemoteVideoEnabe, userId, getString(R.string.voice_chat_friend_cancel), true);
 
                 }
             }
             //呼入中自己挂断了电话
             else if (callstate == LinphoneCallLog.CallStatus.Declined) {
                 if (callBack != null) {
-                    callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_hang_up), false);
+                    callBack.terminateIncomingCall(isRemoteVideoEnabe, userId, getString(R.string.voice_chat_hang_up), false);
                 }
             }
 
@@ -301,12 +322,12 @@ public class VoipService extends Service {
                 if (message.equals("Call ended")) {
                     Toast.makeText(this, getString(R.string.voice_chat_succeed), Toast.LENGTH_SHORT).show();
                     if (callBack != null) {
-                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_time) + time, false);
+                        callBack.terminateIncomingCall(isRemoteVideoEnabe, userId, getString(R.string.voice_chat_time) + time, false);
                     }
                 } else {
                     Toast.makeText(this, getString(R.string.voice_chat_succeed_user), Toast.LENGTH_SHORT).show();
                     if (callBack != null) {
-                        callBack.terminateIncomingCall(userId, getString(R.string.voice_chat_time) + time, false);
+                        callBack.terminateIncomingCall(isRemoteVideoEnabe, userId, getString(R.string.voice_chat_time) + time, false);
                     }
                 }
 
@@ -373,14 +394,13 @@ public class VoipService extends Service {
     private WindowManager mWindowManager;
     private WindowManager.LayoutParams mLayout;
     private View narrowView;
+    private LinphoneOverlay mOverlay;
 
     //缩小悬浮框的设置
     public void createNarrowView() {
         if (SettingsCompat.canDrawOverlays(this)) {
             try {
                 narrowView = LayoutInflater.from(this).inflate(R.layout.voip_netmonitor, null);
-                mWindowManager = (WindowManager) getApplicationContext()
-                        .getSystemService(WINDOW_SERVICE);
                 mLayout = new WindowManager.LayoutParams();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -518,7 +538,7 @@ public class VoipService extends Service {
     }
 
     public synchronized void removeNarrow() {
-        if (mWindowManager != null && narrowView != null) {
+        if (mWindowManager != null) {
             try {
                 mWindowManager.removeView(narrowView);
             } catch (Exception e) {
@@ -527,6 +547,39 @@ public class VoipService extends Service {
 
         }
 
+    }
+
+    public void createOverlay() {
+        if (mOverlay != null) destroyOverlay();
+
+        LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
+        if (call == null || !call.getCurrentParams().getVideoEnabled()) return;
+        if (SettingsCompat.canDrawOverlays(this)) {
+            try {
+                mOverlay = new LinphoneOverlay(this);
+                WindowManager.LayoutParams params = mOverlay.getWindowManagerLayoutParams();
+                params.x = 0;
+                params.y = 0;
+                mWindowManager.addView(mOverlay, params);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            //如果没有开启悬浮窗权限,开启悬浮窗界面
+            NarrowCallback narrowCallback = VoipHelper.getInstance().getNarrowCallback();
+            if (null != narrowCallback) {
+                narrowCallback.openSystemWindow();
+            }
+        }
+
+    }
+
+    public void destroyOverlay() {
+        if (mOverlay != null) {
+            mWindowManager.removeViewImmediate(mOverlay);
+            mOverlay.destroy();
+        }
+        mOverlay = null;
     }
 
     //注册时间计数器
@@ -552,9 +605,11 @@ public class VoipService extends Service {
     }
 
     @Override
-    public void onDestroy() {
+    public synchronized void onDestroy() {
+        destroyOverlay();
         LinphoneCore lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
         if (lc != null) {
+
             try {
                 lc.declineCall(lc.getCurrentCall(), Reason.NotAnswered);
                 lc.terminateAllCalls();
@@ -695,13 +750,18 @@ public class VoipService extends Service {
         resultIntent.putExtra(CHAT_TYPE, type);
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, FLAG_UPDATE_CURRENT);
-        return new NotificationCompat.Builder(getApplicationContext(), id)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), id)
                 .setContentTitle(title)
                 .setContentText(content)
                 .setOngoing(true)
-                .setSmallIcon(R.drawable.voip_answer)
                 .setAutoCancel(false)
                 .setContentIntent(resultPendingIntent);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            builder.setSmallIcon(R.drawable.voip_notification);
+        } else {
+            builder.setSmallIcon(R.drawable.voip_notification2);
+        }
+        return builder;
 
     }
 
@@ -745,5 +805,6 @@ public class VoipService extends Service {
             lc.terminateAllCalls();
         }
     }
+
 
 }

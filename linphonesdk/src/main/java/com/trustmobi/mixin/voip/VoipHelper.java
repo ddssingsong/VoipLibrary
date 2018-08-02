@@ -28,7 +28,7 @@ public class VoipHelper {
     public static String friendName;
     public static boolean isInCall;
     public static boolean isVideoEnale;
-
+    public static long mGroupId = 0;
     private boolean debug;
 
     public void setDebug(boolean debug) {
@@ -64,7 +64,7 @@ public class VoipHelper {
     }
 
     // 拨打电话
-    public void call(Context context, String callName, boolean isVideoEnable) {
+    public void call(Context context, String callName, boolean isVideoEnable,long groupId) {
         if (VoipService.isReady()) {
             // 开始拨打电话
             LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
@@ -72,6 +72,7 @@ public class VoipHelper {
                 friendName = callName;
                 isInCall = true;
                 isVideoEnale = isVideoEnable;
+                mGroupId = groupId;
                 VoipActivity.openActivity(context, VOIP_OUTGOING, isVideoEnable);
             } else {
                 Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
@@ -104,7 +105,7 @@ public class VoipHelper {
         if (VoipService.isReady() && LinphoneManager.isInstanciated()) {
             LinphoneCall currentCall = LinphoneManager.getLc().getCurrentCall();
             if (currentCall != null) {
-                Toast.makeText(context,R.string.voice_voip_is_incall,Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.voice_voip_is_incall, Toast.LENGTH_SHORT).show();
                 return true;
             }
 
