@@ -244,7 +244,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.setCpuCount(availableCores);
         mLc.migrateCallLogs();
         //设置加密方式
-        LinphoneCore.MediaEncryption menc = LinphoneCore.MediaEncryption.None;
+        LinphoneCore.MediaEncryption menc = LinphoneCore.MediaEncryption.SRTP;
         mLc.setMediaEncryption(menc);
 
         //设置如果对方多久未接进行挂断
@@ -741,7 +741,7 @@ public class LinphoneManager implements LinphoneCoreListener {
 
     private boolean isRinging;
 
-    private synchronized void startRinging() {
+    public synchronized void startRinging() {
         int readExternalStorage = PackageManager.PERMISSION_DENIED;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
             readExternalStorage = mContext.getPackageManager().checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, mContext.getPackageName());
@@ -786,7 +786,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         isRinging = true;
     }
 
-    private synchronized void stopRinging() {
+    public synchronized void stopRinging() {
         if (mRingerPlayer != null) {
             mRingerPlayer.stop();
             mRingerPlayer.release();

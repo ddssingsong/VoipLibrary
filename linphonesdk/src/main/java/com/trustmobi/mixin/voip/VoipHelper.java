@@ -64,7 +64,7 @@ public class VoipHelper {
     }
 
     // 拨打电话
-    public void call(Context context, String callName, boolean isVideoEnable,long groupId) {
+    public void call(Context context, String callName, boolean isVideoEnable, long groupId) {
         if (VoipService.isReady()) {
             // 开始拨打电话
             LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
@@ -78,6 +78,23 @@ public class VoipHelper {
                 Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    public void meeting(Context context, String callName, boolean isVideoEnable, long groupId) {
+        if (VoipService.isReady()) {
+            // 开始拨打电话
+            LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
+            if (null == call) {
+                friendName = callName;
+                isInCall = true;
+                isVideoEnale = isVideoEnable;
+                mGroupId = groupId;
+                IncomingActivity.openActivity(context, isVideoEnable, groupId, callName);
+            } else {
+                Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 
     public void unRegister() {

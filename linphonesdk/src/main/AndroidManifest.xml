@@ -23,11 +23,21 @@
         <activity
             android:name="com.trustmobi.mixin.voip.VoipActivity"
             android:configChanges="keyboardHidden|orientation"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Voip.FullScreen" />
+        <activity
+            android:name="com.trustmobi.mixin.voip.OutgoingActivity"
+            android:configChanges="keyboardHidden|orientation"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Voip.FullScreen" />
-        <activity android:name="com.trustmobi.mixin.voip.OutgoingActivity" />
-        <activity android:name="com.trustmobi.mixin.voip.IncomingActivity"></activity>
+        <activity
+            android:name="com.trustmobi.mixin.voip.IncomingActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Voip.FullScreen" />
     </application>
 
 </manifest>

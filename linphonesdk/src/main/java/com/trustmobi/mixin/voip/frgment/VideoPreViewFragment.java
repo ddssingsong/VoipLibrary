@@ -129,6 +129,7 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
                 if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                     camera = Camera.open(camIdx);
                     setCameraDisplayOrientation(getActivity(), camIdx, camera);
+
                 }
             }
             if (camera == null) {
