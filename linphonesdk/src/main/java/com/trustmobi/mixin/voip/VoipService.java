@@ -419,7 +419,7 @@ public class VoipService extends Service {
             mLayout.height = WindowManager.LayoutParams.WRAP_CONTENT;
             mLayout.x = this.getResources().getDisplayMetrics().widthPixels;
             mLayout.y = 0;
-            nominator_tv = (Chronometer) narrowView.findViewById(R.id.netmonitor_tv);
+            nominator_tv = narrowView.findViewById(R.id.netmonitor_tv);
             narrowView.setOnTouchListener(new View.OnTouchListener() {
                 float downX = 0;
                 float downY = 0;
@@ -551,7 +551,6 @@ public class VoipService extends Service {
 
     public void createOverlay() {
         if (mOverlay != null) destroyOverlay();
-
         LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
         if (call == null || !call.getCurrentParams().getVideoEnabled()) return;
         if (SettingsCompat.canDrawOverlays(this)) {
@@ -575,9 +574,13 @@ public class VoipService extends Service {
     }
 
     public void destroyOverlay() {
-        if (mOverlay != null) {
-            mWindowManager.removeViewImmediate(mOverlay);
-            mOverlay.destroy();
+        if (mWindowManager != null && mOverlay != null) {
+            try {
+                mWindowManager.removeViewImmediate(mOverlay);
+                mOverlay.destroy();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         mOverlay = null;
     }

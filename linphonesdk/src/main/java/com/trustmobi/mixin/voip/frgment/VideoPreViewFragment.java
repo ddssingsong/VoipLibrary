@@ -116,7 +116,10 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
     }
 
     private void initCamera() {
-        camera.startPreview();
+        if (camera != null) {
+            camera.startPreview();
+        }
+
     }
 
     @Override
@@ -137,12 +140,14 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
                 setCameraDisplayOrientation(getActivity(), 0, camera);
             }
             camera.setPreviewDisplay(surfaceHolder);
+            initCamera();
         } catch (Exception e) {
             if (null != camera) {
                 camera.release();
                 camera = null;
             }
         }
+
     }
 
     @Override

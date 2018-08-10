@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -58,7 +59,13 @@ public class LinphoneOverlay extends org.linphone.mediastream.video.display.GL2J
         params.gravity = Gravity.TOP | Gravity.LEFT;
         metrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(metrics);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            params.type = WindowManager.LayoutParams.TYPE_TOAST;
+        } else {
+            params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        }
         androidVideoWindowImpl = new AndroidVideoWindowImpl(this, null, new AndroidVideoWindowImpl.VideoWindowListener() {
             public void onVideoRenderingSurfaceReady(AndroidVideoWindowImpl vw, SurfaceView surface) {
                 LinphoneManager.getLc().setVideoWindow(vw);
