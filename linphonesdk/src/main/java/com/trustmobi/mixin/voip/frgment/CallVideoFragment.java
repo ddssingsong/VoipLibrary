@@ -63,9 +63,6 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
     private VoipActivity inCallActivity;
     private int previewX, previewY;
 
-    @SuppressLint("ClickableViewAccessibility")
-    @SuppressWarnings("deprecation")
-    // Warning useless because value is ignored and automatically set by new APIs.
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -75,13 +72,11 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
         } else {
             view = inflater.inflate(R.layout.voip_video, container, false);
         }
-
-        mVideoView = (SurfaceView) view.findViewById(R.id.videoSurface);
-        mCaptureView = (SurfaceView) view.findViewById(R.id.videoCaptureSurface);
+        mVideoView = view.findViewById(R.id.videoSurface);
+        mCaptureView = view.findViewById(R.id.videoCaptureSurface);
         mCaptureView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS); // Warning useless because value is ignored and automatically set by new APIs.
 
         fixZOrder(mVideoView, mCaptureView);
-
         androidVideoWindowImpl = new AndroidVideoWindowImpl(mVideoView, mCaptureView, new AndroidVideoWindowImpl.VideoWindowListener() {
             public void onVideoRenderingSurfaceReady(AndroidVideoWindowImpl vw, SurfaceView surface) {
                 mVideoView = surface;
@@ -96,12 +91,20 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
                 mCaptureView = surface;
                 LinphoneManager.getLc().setPreviewWindow(mCaptureView);
                 resizePreview();
+
+                initCamera();
             }
 
             public void onVideoPreviewSurfaceDestroyed(AndroidVideoWindowImpl vw) {
 
             }
         });
+        initTouch();
+        return view;
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void initTouch() {
 
         mVideoView.setOnTouchListener(new OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
@@ -111,7 +114,7 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
 
                 mGestureDetector.onTouchEvent(event);
                 if (inCallActivity != null) {
-                    //inCallActivity.displayVideoCallControlsIfHidden();
+                    inCallActivity.displayVideoCallControlsIfHidden();
                 }
                 return true;
             }
@@ -141,7 +144,6 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
                 return true;
             }
         });
-        return view;
     }
 
     @Override
@@ -201,10 +203,24 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
         }
     }
 
+    public void initCamera() {
+        try {
+            int videoDeviceId = LinphoneManager.getLc().getVideoDevice();
+            videoDeviceId = (videoDeviceId) % AndroidCameraConfiguration.retrieveCameras().length;
+            LinphoneManager.getLc().setVideoDevice(videoDeviceId);
+            CallManager.getInstance().updateCall();
+
+            if (mCaptureView != null) {
+                LinphoneManager.getLc().setPreviewWindow(mCaptureView);
+            }
+        } catch (ArithmeticException ae) {
+            Log.e("Cannot swtich camera : no camera");
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-
         VoipService.instance().destroyOverlay();
 
         if (androidVideoWindowImpl != null) {
@@ -225,8 +241,8 @@ public class CallVideoFragment extends Fragment implements OnGestureListener, On
             synchronized (androidVideoWindowImpl) {
                 /*
                  * this call will destroy native opengl renderer which is used by
-				 * androidVideoWindowImpl
-				 */
+                 * androidVideoWindowImpl
+                 */
                 LinphoneManager.getLc().setVideoWindow(null);
             }
         }

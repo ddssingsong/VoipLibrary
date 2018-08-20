@@ -10,7 +10,7 @@ sip_tcp_port=-1
 sip_tls_port=-1
 
 [video]
-size=vga
+size=qvga
 
 [app]
 tunnel=disabled

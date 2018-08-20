@@ -57,7 +57,6 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.voip_video_preview, container, false);
         mCaptureView = (SurfaceView) view.findViewById(R.id.videoCaptureSurface);
         voip_voice_chat_avatar = (ImageView) view.findViewById(R.id.voip_voice_chat_avatar);
@@ -167,13 +166,18 @@ public class VideoPreViewFragment extends Fragment implements SurfaceHolder.Call
     }
 
     @Override
-    public void onDestroyView() {
+    public void onPause() {
         if (camera != null) {
             camera.setPreviewCallback(null);
             camera.stopPreview();
             camera.release();
             camera = null;
         }
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
         super.onDestroyView();
     }
 

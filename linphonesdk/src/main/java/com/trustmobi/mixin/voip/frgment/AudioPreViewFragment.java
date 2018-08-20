@@ -28,6 +28,7 @@ public class AudioPreViewFragment extends Fragment {
     private ImageView iv_background;
     private ImageView voip_voice_chat_avatar;
     private TextView voice_chat_friend_name;
+    private TextView voip_voice_chat_state_tips;
 
     @Nullable
     @Override
@@ -39,9 +40,10 @@ public class AudioPreViewFragment extends Fragment {
     }
 
     private void initView(View rootView) {
-        voip_voice_chat_avatar = (ImageView) rootView.findViewById(R.id.voip_voice_chat_avatar);
-        voice_chat_friend_name = (TextView) rootView.findViewById(R.id.voice_chat_friend_name);
-        iv_background = (ImageView) rootView.findViewById(R.id.iv_background);
+        voip_voice_chat_avatar = rootView.findViewById(R.id.voip_voice_chat_avatar);
+        voice_chat_friend_name = rootView.findViewById(R.id.voice_chat_friend_name);
+        iv_background = rootView.findViewById(R.id.iv_background);
+        voip_voice_chat_state_tips = rootView.findViewById(R.id.voip_voice_chat_state_tips);
     }
 
     private ChatInfo info;
@@ -79,4 +81,11 @@ public class AudioPreViewFragment extends Fragment {
         }
 
     }
+
+    //更新提示语
+    public void updateChatStateTips(String tips) {
+        voip_voice_chat_state_tips.setVisibility(View.VISIBLE);
+        voip_voice_chat_state_tips.setText(tips);
+    }
+
 }

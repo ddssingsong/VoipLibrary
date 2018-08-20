@@ -92,7 +92,7 @@ public class LinphoneOverlay extends org.linphone.mediastream.video.display.GL2J
             @Override
             public void onClick(View v) {
                 Context context = VoipService.instance();
-                VoipActivity.openActivity(context, VOIP_CALL, true);
+                VoipActivity.openActivity(context, VOIP_CALL);
             }
         });
         setOnLongClickListener(new OnLongClickListener() {

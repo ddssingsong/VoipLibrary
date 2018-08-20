@@ -22,14 +22,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import android.app.Fragment;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -50,17 +48,14 @@ import org.linphone.core.LinphoneCall;
 import static com.trustmobi.mixin.voip.VoipActivity.CHAT_TYPE;
 import static com.trustmobi.mixin.voip.VoipActivity.VOIP_CALL;
 import static com.trustmobi.mixin.voip.VoipActivity.VOIP_INCOMING;
-import static com.trustmobi.mixin.voip.VoipActivity.VOIP_OUTGOING;
 
 public class CallAudioFragment extends Fragment implements View.OnClickListener {
 
     private Button narrow_button;
-
     private ImageView iv_background;
     private ImageView voip_voice_chat_avatar;
     private TextView voice_chat_friend_name;
     private TextView voip_voice_chat_state_tips;
-    private Chronometer voip_voice_chat_time;
 
 
     private VoipActivity incallActvityInstance;
@@ -80,7 +75,6 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
                              Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.voip_audio, container, false);
-
             initView(rootView);
             initListener();
             initVar();
@@ -89,30 +83,38 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
         return rootView;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        incallActvityInstance = (VoipActivity) getActivity();
+        if (incallActvityInstance != null) {
+            incallActvityInstance.bindAudioFragment(this);
+        }
+    }
+
     private void initView(View rootView) {
-        narrow_button = (Button) rootView.findViewById(R.id.narrow_button);
-        voip_voice_chat_state_tips = (TextView) rootView.findViewById(R.id.voip_voice_chat_state_tips);
-        voip_voice_chat_avatar = (ImageView) rootView.findViewById(R.id.voip_voice_chat_avatar);
-        voice_chat_friend_name = (TextView) rootView.findViewById(R.id.voice_chat_friend_name);
-        iv_background = (ImageView) rootView.findViewById(R.id.iv_background);
-        voip_voice_chat_time = rootView.findViewById(R.id.voip_voice_chat_time);
+        narrow_button = rootView.findViewById(R.id.narrow_button);
+        voip_voice_chat_state_tips = rootView.findViewById(R.id.voip_voice_chat_state_tips);
+        voip_voice_chat_avatar = rootView.findViewById(R.id.voip_voice_chat_avatar);
+        voice_chat_friend_name = rootView.findViewById(R.id.voice_chat_friend_name);
+        iv_background = rootView.findViewById(R.id.iv_background);
 
         if (chatType == VOIP_INCOMING) {
             updateChatStateTips(getString(R.string.voice_chat_invite));
             narrow_button.setVisibility(View.INVISIBLE);
-        } else if (chatType == VOIP_OUTGOING) {
-            updateChatStateTips(getString(R.string.voice_chat_calling));
-            narrow_button.setVisibility(View.INVISIBLE);
-        } else {
+        } else if (chatType == VOIP_CALL) {
             narrow_button.setVisibility(View.VISIBLE);
             voip_voice_chat_state_tips.setVisibility(View.INVISIBLE);
             LinphoneCall call = LinphoneManager.getLc().getCurrentCall();
-            if(call!=null){
-                registerCallDurationTimer(voip_voice_chat_time, call);
-            }
+            if (call != null) {
+                if (incallActvityInstance != null) {
+                    incallActvityInstance.registerCallDurationTimer(null, call);
+                }
 
+            }
         }
 
+        //设置narrow的位置
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             int statusBarHeight = StatusBarCompat.getStatusBarHeight(getActivity());
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(narrow_button.getLayoutParams());
@@ -172,19 +174,6 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
 
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        incallActvityInstance = (VoipActivity) getActivity();
-        if (incallActvityInstance != null) {
-            incallActvityInstance.bindAudioFragment(this);
-        }
-        // Just to be sure we have incall controls
-        if (incallActvityInstance != null) {
-            //incallActvityInstance.removeCallbacks();
-        }
-    }
-
 
     @Override
     public void onDestroyView() {
@@ -216,23 +205,6 @@ public class CallAudioFragment extends Fragment implements View.OnClickListener 
     public void updateChatStateTips(String tips) {
         voip_voice_chat_state_tips.setVisibility(View.VISIBLE);
         voip_voice_chat_state_tips.setText(tips);
-    }
-
-    public void registerCallDurationTimer(View v, LinphoneCall call) {
-        int callDuration = call.getDuration();
-        if (callDuration == 0 && call.getState() != LinphoneCall.State.StreamsRunning) {
-            return;
-        }
-        Chronometer timer = null;
-        if (v == null) {
-            timer = (Chronometer) rootView.findViewById(R.id.voip_voice_chat_time);
-            timer.setVisibility(View.VISIBLE);
-        }
-        if (timer != null) {
-            timer.setBase(SystemClock.elapsedRealtime() - 1000 * callDuration);
-            timer.start();
-        }
-
     }
 
 

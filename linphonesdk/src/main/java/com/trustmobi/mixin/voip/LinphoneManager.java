@@ -244,7 +244,7 @@ public class LinphoneManager implements LinphoneCoreListener {
         mLc.setCpuCount(availableCores);
         mLc.migrateCallLogs();
         //设置加密方式
-        LinphoneCore.MediaEncryption menc = LinphoneCore.MediaEncryption.SRTP;
+        LinphoneCore.MediaEncryption menc = LinphoneCore.MediaEncryption.None;
         mLc.setMediaEncryption(menc);
 
         //设置如果对方多久未接进行挂断

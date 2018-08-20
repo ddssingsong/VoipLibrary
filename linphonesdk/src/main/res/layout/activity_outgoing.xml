@@ -1,9 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:combtn="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#242424"
     tools:context="com.trustmobi.mixin.voip.OutgoingActivity">
 
+    <!--分类界面-->
+    <RelativeLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible" />
+
+    <!--拨出取消 上方切换到语音-->
+    <RelativeLayout
+        android:id="@+id/voip_chat_outgoing"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp">
+
+        <!--取消拨出-->
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            combtn:voip_src="@drawable/voip_btn_voice_cancel"
+            combtn:voip_text="@string/voice_chat_refuse_call" />
+        <!--设置静音-->
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_mute"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_toLeftOf="@id/voip_cancel"
+            android:layout_toStartOf="@id/voip_cancel"
+            android:gravity="center"
+            combtn:voip_src="@drawable/voip_btn_voice_mute"
+            combtn:voip_text="@string/voice_chat_mute" />
+        <!--开启扬声器-->
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_hands_free"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_toEndOf="@id/voip_cancel"
+            android:layout_toRightOf="@id/voip_cancel"
+            android:gravity="center"
+            combtn:voip_src="@drawable/voip_btn_voice_hand_free"
+            combtn:voip_text="@string/voice_chat_hands_free" />
+
+
+        <!--切换到语音 暂未使用-->
+        <com.trustmobi.mixin.voip.ComButton
+            android:id="@+id/voip_chat_switch_audio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/voip_cancel"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone"
+            combtn:voip_src="@drawable/voip_switch_voice"
+            combtn:voip_text="@string/voip_switch_voice" />
+
+    </RelativeLayout>
 </RelativeLayout>

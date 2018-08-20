@@ -54,17 +54,6 @@
             android:textSize="15sp"
             android:visibility="visible" />
 
-        <Chronometer
-            android:id="@+id/voip_voice_chat_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/voip_voice_chat_state_tips"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="50dp"
-            android:textColor="@android:color/white"
-            android:textSize="15sp"
-            android:visibility="gone" />
-
     </RelativeLayout>
 
     <!--切换到悬浮窗-->

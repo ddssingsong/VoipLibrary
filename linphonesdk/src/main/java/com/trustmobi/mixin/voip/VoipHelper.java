@@ -11,8 +11,6 @@ import com.trustmobi.mixin.voip.callback.VoipCallBack;
 
 import org.linphone.core.LinphoneCall;
 
-import static com.trustmobi.mixin.voip.VoipActivity.VOIP_OUTGOING;
-
 /**
  * Created by dds on 2018/5/3.
  * android_shuai@163.com
@@ -73,7 +71,7 @@ public class VoipHelper {
                 isInCall = true;
                 isVideoEnale = isVideoEnable;
                 mGroupId = groupId;
-                VoipActivity.openActivity(context, VOIP_OUTGOING, isVideoEnable);
+                OutgoingActivity.openActivity(context, isVideoEnable);
             } else {
                 Toast.makeText(context, R.string.voice_chat_error_calling, Toast.LENGTH_LONG).show();
             }
