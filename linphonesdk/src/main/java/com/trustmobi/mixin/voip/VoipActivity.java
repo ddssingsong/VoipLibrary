@@ -242,6 +242,10 @@ public class VoipActivity extends AppCompatActivity implements ComButton.onComCl
             //正在通话中
             lookupCalling();
             showCallView(mCall != null && isVideoEnabled(mCall));
+            if (mCall != null) {
+                registerCallDurationTimer(null, mCall);
+            }
+
 
         }
 

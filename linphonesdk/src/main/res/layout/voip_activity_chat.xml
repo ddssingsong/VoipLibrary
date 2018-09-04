@@ -171,6 +171,7 @@
 
         </RelativeLayout>
 
+        <!--计时器-->
         <Chronometer
             android:id="@+id/voip_voice_chat_time"
             android:layout_width="wrap_content"
@@ -180,7 +181,7 @@
             android:layout_marginBottom="150dp"
             android:textColor="@android:color/white"
             android:textSize="15sp"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
     </RelativeLayout>
 
