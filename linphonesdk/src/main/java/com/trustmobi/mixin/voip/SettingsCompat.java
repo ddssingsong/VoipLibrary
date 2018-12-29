@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
 
 /**
  * Created by dds on 2018/3/20.
- * 联信摩贝
  */
 
 public class SettingsCompat {

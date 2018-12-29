@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 
 /**
  * Created by dds on 2018/3/20.
- * 联信摩贝
+ * dds
  */
 
 public class RomUtil {

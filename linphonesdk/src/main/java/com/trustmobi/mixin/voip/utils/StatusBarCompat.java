@@ -12,7 +12,6 @@ import android.widget.LinearLayout;
 
 /**
  * Created by dds on 2017/1/11.
- * 联信摩贝
  */
 
 public class StatusBarCompat {
