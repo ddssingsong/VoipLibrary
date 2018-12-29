@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     private EditText edit_pwd;
     private EditText edit_to;
 
-    private int REQUEST_CODE = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                                 Manifest.permission.CAMERA,
                                 Manifest.permission.READ_CONTACTS
                         },
-                        REQUEST_CODE);
+                        1000);
 
             }
 
