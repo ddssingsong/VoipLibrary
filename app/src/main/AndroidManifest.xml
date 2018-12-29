@@ -57,7 +57,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="com.dds.voip.MainActivity"
             android:configChanges="keyboardHidden"
             android:screenOrientation="portrait">
             <intent-filter>
