@@ -18,12 +18,10 @@ import static com.trustmobi.voip.VoipUtil.serverUrl;
 
 
 public class MainActivity extends AppCompatActivity {
-    EditText edit_domain;
-    EditText edit_username;
-    EditText edit_pwd;
-    EditText edit_to;
-
-    private boolean isDebug = true;
+    private EditText edit_domain;
+    private EditText edit_username;
+    private EditText edit_pwd;
+    private EditText edit_to;
 
     private int REQUEST_CODE = 1000;
 
@@ -100,8 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void login(View view) {
         VoipUtil.login(edit_username.getText().toString(), edit_pwd.getText().toString());
-
-
     }
 
     public void logout(View view) {
@@ -117,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
         String callName = edit_to.getText().toString().trim();
         VoipUtil.outgoing(this, callName, true);
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

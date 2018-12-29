@@ -20,7 +20,7 @@ import org.linphone.core.LinphoneCall;
 
 public class VoipHelper {
     public final static String TAG = "dds_voip_helper";
-    private String stun = null;
+    private String stun = "";
     //通话界面显示的内容
     private ChatInfo chatInfo;
     public static String friendName;

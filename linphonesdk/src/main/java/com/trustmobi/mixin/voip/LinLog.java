@@ -3,6 +3,8 @@ package com.trustmobi.mixin.voip;
 
 import android.util.Log;
 
+import com.dds.tbs.linphonesdk.BuildConfig;
+
 
 /**
  * Created by dds on 2018/5/3.
@@ -12,11 +14,16 @@ import android.util.Log;
 public class LinLog {
 
     public static void d(String tag, String msg) {
-        Log.d(tag, msg);
+        if (BuildConfig.DEBUG) {
+            Log.d(tag, msg);
+        }
+
 
     }
 
     public static void e(String tag, String msg) {
-        Log.e(tag, msg);
+        if (BuildConfig.DEBUG) {
+            Log.e(tag, msg);
+        }
     }
 }

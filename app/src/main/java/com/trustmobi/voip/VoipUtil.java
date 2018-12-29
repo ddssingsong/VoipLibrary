@@ -48,7 +48,6 @@ public class VoipUtil {
 
     }
 
-    //sssss
     public static void setBussinessCallback(VoipCallBack callBack) {
         VoipHelper.getInstance().setVoipCallBack(callBack);
     }

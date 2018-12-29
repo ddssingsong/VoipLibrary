@@ -750,9 +750,9 @@ public class VoipService extends Service {
                 .setAutoCancel(false)
                 .setContentIntent(resultPendingIntent);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            builder.setSmallIcon(R.drawable.voip_notification);
+            builder.setSmallIcon(R.drawable.voip_answer);
         } else {
-            builder.setSmallIcon(R.drawable.voip_notification2);
+            builder.setSmallIcon(R.drawable.voip_answer);
         }
         return builder;
 
