@@ -6,6 +6,7 @@ import android.content.Context;
 import com.dds.mixin.voip.VoipHelper;
 import com.dds.mixin.voip.callback.NarrowCallbackDefault;
 import com.dds.mixin.voip.callback.VoipCallBack;
+import com.trustmobi.voip.BuildConfig;
 
 /**
  * Created by dds on 2018/7/11.

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context="com.trustmobi.voip.com.dds.voip.MainActivity">
+    tools:context="com.dds.voip.MainActivity">
 
     <ScrollView
         android:layout_width="match_parent"

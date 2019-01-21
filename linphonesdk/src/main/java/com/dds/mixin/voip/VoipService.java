@@ -97,7 +97,7 @@ public class VoipService extends Service {
         //设置日志
         isDebug = VoipHelper.getInstance().isDebug();
         LinphoneCoreFactory.instance().setDebugMode(isDebug, "dds_voip");
-        LinphoneCoreFactory.instance().setLogCollectionPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/trustmobi_voip");
+        LinphoneCoreFactory.instance().setLogCollectionPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/linphone");
         mWindowManager = (WindowManager) getApplicationContext()
                 .getSystemService(WINDOW_SERVICE);
         //开启基本配置
