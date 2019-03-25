@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion rootProject.ext.android.compileSdkVersion
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion rootProject.ext.android.minSdkVersion
+        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        versionCode rootProject.ext.android.versionCode
+        versionName rootProject.ext.android.versionName
         ndk {
-            abiFilters 'armeabi'
+            abiFilters 'armeabi-v7a'
         }
 
     }
@@ -23,12 +23,12 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
-    buildToolsVersion '26.0.2'
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.github.bumptech.glide:glide:3.7.0'
-    compile 'org.apache.commons:commons-compress:1.16.1'
-    compile 'com.android.support:appcompat-v7:26.1.0'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation rootProject.ext.dependencies["glide"]
+    implementation rootProject.ext.dependencies["appcompat-v7"]
+    implementation 'org.apache.commons:commons-compress:1.16.1'
+
 }

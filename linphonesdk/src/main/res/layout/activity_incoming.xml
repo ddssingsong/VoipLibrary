@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#242424"
-    tools:context="com.dds.mixin.voip.IncomingActivity">
+    android:background="@color/voip_background_color"
+    tools:context="com.mixin.voip.IncomingActivity">
     <!--分类界面-->
     <RelativeLayout
         android:id="@+id/fragmentContainer"
@@ -23,7 +23,7 @@
         android:orientation="horizontal"
         android:visibility="visible">
 
-        <com.dds.mixin.voip.ComButton
+        <com.mixin.voip.ComButton
             android:id="@+id/voip_hang_up"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -32,7 +32,7 @@
             combtn:voip_src="@drawable/voip_btn_voice_cancel"
             combtn:voip_text="@string/voice_chat_refuse" />
 
-        <com.dds.mixin.voip.ComButton
+        <com.mixin.voip.ComButton
             android:id="@+id/voip_accept"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

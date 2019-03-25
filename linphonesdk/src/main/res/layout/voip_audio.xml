@@ -3,7 +3,6 @@
     android:id="@+id/voip_rl_audio"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#242424"
     android:visibility="visible">
     <!--聊天背景，使用头像-->
     <ImageView
@@ -31,7 +30,6 @@
         android:layout_below="@+id/voip_voice_chat_avatar"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:text="好友名称"
         android:textColor="@android:color/white"
         android:textSize="28sp" />
 
@@ -61,8 +59,8 @@
         android:id="@+id/narrow_button"
         android:layout_width="28dp"
         android:layout_height="28dp"
-        android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/voip_reduced" />
 
