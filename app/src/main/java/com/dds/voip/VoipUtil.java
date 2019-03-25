@@ -3,9 +3,9 @@ package com.dds.voip;
 import android.app.Activity;
 import android.content.Context;
 
-import com.dds.mixin.voip.VoipHelper;
-import com.dds.mixin.voip.callback.NarrowCallbackDefault;
-import com.dds.mixin.voip.callback.VoipCallBack;
+import com.mixin.voip.VoipHelper;
+import com.mixin.voip.callback.NarrowCallbackDefault;
+import com.mixin.voip.callback.VoipCallBack;
 import com.trustmobi.voip.BuildConfig;
 
 /**
