@@ -6,9 +6,7 @@ ext {
 
             minSdkVersion    : 19,
             targetSdkVersion : 26,
-            versionCode      : 94,    //版本号
-            versionName      : '6.1.32', //版本名称
-            buildVersion     : 6130,     //每次打包的小版本号
+
 
             dataBaseVersion  : "24",  //数据库版本号
             VSupportSdk      : '27.0.0',

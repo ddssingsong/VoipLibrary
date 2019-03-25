@@ -13,9 +13,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.mixin.voip.SettingsCompat;
 import com.trustmobi.voip.R;
 
-import static com.dds.mixin.voip.SettingsCompat.REQUEST_SYSTEM_ALERT_WINDOW;
 import static com.dds.voip.VoipUtil.serverUrl;
 
 
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                     ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO) ||
                     ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
                     ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS)
-                    ) {
+            ) {
                 //已经禁止提示了
                 Toast.makeText(MainActivity.this, "您已禁止该权限，需要重新开启。", Toast.LENGTH_SHORT).show();
             } else {
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_SYSTEM_ALERT_WINDOW) {
+        if (requestCode == SettingsCompat.REQUEST_SYSTEM_ALERT_WINDOW) {
             VoipUtil.openNarrow();
         }
     }
