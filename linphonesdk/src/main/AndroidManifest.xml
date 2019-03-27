@@ -9,31 +9,31 @@
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
     <application>
-        <receiver android:name="com.mixin.voip.recevier.PhoneStateChangedReceiver">
+        <receiver android:name="com.dds.voip.recevier.PhoneStateChangedReceiver">
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
 
         <service
-            android:name="com.mixin.voip.VoipService"
+            android:name="com.dds.voip.VoipService"
             android:enabled="true"
             android:exported="true" />
 
         <activity
-            android:name="com.mixin.voip.VoipActivity"
+            android:name="com.dds.voip.VoipActivity"
             android:configChanges="keyboardHidden|orientation"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Voip.FullScreen" />
         <activity
-            android:name="com.mixin.voip.OutgoingActivity"
+            android:name="com.dds.voip.OutgoingActivity"
             android:configChanges="keyboardHidden|orientation"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Voip.FullScreen" />
         <activity
-            android:name="com.mixin.voip.IncomingActivity"
+            android:name="com.dds.voip.IncomingActivity"
             android:configChanges="keyboardHidden|orientation"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"

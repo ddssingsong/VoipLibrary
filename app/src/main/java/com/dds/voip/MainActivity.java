@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.mixin.voip.SettingsCompat;
 import com.trustmobi.voip.R;
 
 import static com.dds.voip.VoipUtil.serverUrl;

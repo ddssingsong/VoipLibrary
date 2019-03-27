@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#242424"
-    tools:context="com.mixin.voip.OutgoingActivity">
+    tools:context="com.dds.voip.OutgoingActivity">
 
     <!--分类界面-->
     <RelativeLayout
@@ -23,7 +23,7 @@
         android:layout_marginBottom="10dp">
 
         <!--取消拨出-->
-        <com.mixin.voip.ComButton
+        <com.dds.voip.ComButton
             android:id="@+id/voip_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -32,7 +32,7 @@
             combtn:voip_src="@drawable/voip_btn_voice_cancel"
             combtn:voip_text="@string/voice_chat_refuse_call" />
         <!--设置静音-->
-        <com.mixin.voip.ComButton
+        <com.dds.voip.ComButton
             android:id="@+id/voip_chat_mute"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
             combtn:voip_src="@drawable/voip_btn_voice_mute"
             combtn:voip_text="@string/voice_chat_mute" />
         <!--开启扬声器-->
-        <com.mixin.voip.ComButton
+        <com.dds.voip.ComButton
             android:id="@+id/voip_chat_hands_free"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -56,7 +56,7 @@
 
 
         <!--切换到语音 暂未使用-->
-        <com.mixin.voip.ComButton
+        <com.dds.voip.ComButton
             android:id="@+id/voip_chat_switch_audio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

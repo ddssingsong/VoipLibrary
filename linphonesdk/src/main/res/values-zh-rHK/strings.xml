@@ -20,6 +20,7 @@
     <!--呼入电话-->
     <string name="voice_chat_hang_up">已拒绝</string>
     <string name="voice_chat_friend_cancel">對方已取消</string>
+    <string name="voice_chat_incall_miss">忙线未接听</string>
     <!--呼入和拨出-->
     <string name="voice_chat_time">聊天時長 </string>
     <string name="voice_chat_time_out">未接</string>

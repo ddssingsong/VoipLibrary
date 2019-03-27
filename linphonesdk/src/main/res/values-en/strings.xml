@@ -20,6 +20,7 @@
     <!--呼入电话-->
     <string name="voice_chat_hang_up">Rejected</string>
     <string name="voice_chat_friend_cancel">canceled</string>
+    <string name="voice_chat_incall_miss">Busy Miss</string>
     <!--呼入和拨出-->
     <string name="voice_chat_time">Chat Time </string>
     <string name="voice_chat_time_out">Missed</string>
